@@ -18,10 +18,10 @@ Vertex & Fragment Shaders, Memory Management, Parallelization with CUDA and much
 - C/C++
 - OpenGL (Priority) (Cross Platform)
 - DirectX12 (Windows Only)
-- Vulkan (Cross Platform) (Overkill for 2D/2.5D, will come at the end)
+- Vulkan (Cross Platform) (Overkill for 2D/2.5D, will be built at the end)
 - GLFW (Window Creation & Management)
 - GLM (Mathematic Library for Graphics & Shaders)
-- CUDA (Overkill for 2D/2.5D unless the game created needs optimization, will come at the end)
+- CUDA (Overkill for 2D/2.5D unless the game created needs optimization, will be built at the end)
 - CMake (Build Tool) (Cross Platform)
 
 ### 100% Completion Criteria - When the Game Engine is finalized
