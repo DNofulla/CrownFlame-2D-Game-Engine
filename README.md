@@ -1,6 +1,6 @@
 ## CrownFlame 2D Custom Game Engine
 
-<div style="text-align:center">
+<div align="center">
 	<img src="./resources/CrownFlame2D_Game_Engine.png" alt="CrownFlame 2D Custom Game Engine" />	
 </div>
 
