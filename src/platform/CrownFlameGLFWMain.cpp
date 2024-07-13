@@ -60,7 +60,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 	{
 		return;
 	}
-	
+
 	if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z)
 	{
 		int index = key - GLFW_KEY_A;
@@ -136,7 +136,7 @@ void mouseCallback(GLFWwindow* window, int key, int action, int mods)
 	if (key == GLFW_MOUSE_BUTTON_LEFT)
 	{
 		platform::internal::setLeftMouseState(state);
-	} 
+	}
 	else if (key == GLFW_MOUSE_BUTTON_RIGHT)
 	{
 		platform::internal::setRightMouseState(state);

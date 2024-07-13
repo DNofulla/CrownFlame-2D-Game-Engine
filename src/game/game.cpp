@@ -34,35 +34,35 @@ bool gameLogic(float deltaTime)
 	int width = 0; int height = 0;
 	width = platform::getFrameBufferSizeX(); // window width
 	height = platform::getFrameBufferSizeY(); // window height
-
+	
 	glViewport(0, 0, width, height);
 	glClear(GL_COLOR_BUFFER_BIT); //clear screen
 
 	renderer.updateWindowMetrics(width, height);
+
 #pragma endregion
 
 	if (platform::isButtonHeld(platform::Button::Left))
 	{
-		GameSave.rectPos.x -= deltaTime * 200;
+		GameSave.rectPos.x -= deltaTime * 100;
 	}
 
 	if (platform::isButtonHeld(platform::Button::Right))
 	{
-		GameSave.rectPos.x += deltaTime * 200;
+		GameSave.rectPos.x += deltaTime * 100;
 	}
 
 	if (platform::isButtonHeld(platform::Button::Up))
 	{
-		GameSave.rectPos.y -= deltaTime * 200;
+		GameSave.rectPos.y -= deltaTime * 100;
 	}
 
 	if (platform::isButtonHeld(platform::Button::Down))
 	{
-		GameSave.rectPos.y += deltaTime * 200;
+		GameSave.rectPos.y += deltaTime * 100;
 	}
 
 	GameSave.rectPos = glm::clamp(GameSave.rectPos, glm::vec2{ 0,0 }, glm::vec2{ width - 100, height - 100 });
-	renderer.renderRectangle({ GameSave.rectPos, 100, 100 }, Colors_Red);
 
 	renderer.flush();
 
