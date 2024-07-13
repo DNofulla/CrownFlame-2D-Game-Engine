@@ -63,7 +63,7 @@ bool gameLogic(float deltaTime)
 	}
 
 	GameSave.rectPos = glm::clamp(GameSave.rectPos, glm::vec2{ 0,0 }, glm::vec2{ width - 100, height - 100 });
-
+	renderer.renderRectangle({ GameSave.rectPos, 100, 100 }, Colors_Red);
 	renderer.flush();
 
 	ImGui::Begin("RECTANGLE POSITION");
