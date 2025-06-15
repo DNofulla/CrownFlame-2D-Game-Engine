@@ -4,7 +4,6 @@
 #include <memory>
 #include <string>
 
-
 // Forward declarations
 class AudioManager;
 
@@ -57,6 +56,23 @@ public:
     return sceneDefinition.description;
   }
   const std::string &getNextScene() const { return sceneDefinition.nextScene; }
+
+  // Scene information for UI display
+  int getObjectCount() const;
+  int getObstacleCount() const {
+    return static_cast<int>(sceneDefinition.obstacles.size());
+  }
+  int getCollectibleCount() const {
+    return static_cast<int>(sceneDefinition.collectibles.size());
+  }
+  int getEnemyCount() const {
+    return static_cast<int>(sceneDefinition.enemies.size());
+  }
+  float getWorldWidth() const { return sceneDefinition.world.width; }
+  float getWorldHeight() const { return sceneDefinition.world.height; }
+  const std::string &getTransitionTrigger() const {
+    return sceneDefinition.transitionTrigger;
+  }
 
   // Audio management
   void setAudioManager(AudioManager *audioManager);

@@ -266,3 +266,9 @@ void Scene::setupTilemap() {
 }
 
 bool Scene::checkCompletionConditions() { return isSceneComplete(); }
+
+int Scene::getObjectCount() const {
+  if (!gameWorld)
+    return 0;
+  return static_cast<int>(gameWorld->getObjects().size());
+}

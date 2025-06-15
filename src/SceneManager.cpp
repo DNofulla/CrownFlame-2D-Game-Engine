@@ -70,12 +70,19 @@ bool SceneManager::loadSceneFromFile(const std::string &sceneName,
     return false;
   }
 
-  // Use the name from the definition, but allow override
-  if (definition.name.empty()) {
-    definition.name = sceneName;
-  }
+  // Always use the provided sceneName to avoid mismatches
+  std::cout << "Loading scene '" << sceneName
+            << "' from file, original name in file was '" << definition.name
+            << "'" << std::endl;
+  definition.name = sceneName;
 
-  return loadSceneFromDefinition(sceneName, definition);
+  bool result = loadSceneFromDefinition(sceneName, definition);
+  if (result) {
+    std::cout << "Successfully loaded scene '" << sceneName << "'" << std::endl;
+  } else {
+    std::cout << "Failed to load scene '" << sceneName << "'" << std::endl;
+  }
+  return result;
 }
 
 void SceneManager::unloadScene(const std::string &sceneName) {

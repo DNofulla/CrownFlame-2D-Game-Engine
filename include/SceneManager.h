@@ -6,7 +6,6 @@
 #include <string>
 #include <unordered_map>
 
-
 // Forward declarations
 class AudioManager;
 

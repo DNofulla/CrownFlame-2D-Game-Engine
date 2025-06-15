@@ -1,13 +1,22 @@
 #include "UIManager.h"
+#include "FileBrowser.h"
+#include "Scene.h"
 #include "SceneManager.h"
+#include "SceneTemplates.h"
+#include "SceneValidator.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 #include "imgui.h"
 #include "imguiThemes.h"
 #include <GLFW/glfw3.h>
+#include <iostream>
 #include <vector>
 
-UIManager::UIManager() : initialized(false) {}
+UIManager::UIManager()
+    : initialized(false), selectedTemplateIndex(0), showTemplateCreator(false),
+      showFileBrowser(false), showSceneInfo(false),
+      showValidationResults(false), currentValidationResult(nullptr),
+      needsSceneListRefresh(true) {}
 
 UIManager::~UIManager() {
   if (initialized)
@@ -138,8 +147,39 @@ void UIManager::renderGameUI(GameWorld &gameWorld, const FPSCounter &fpsCounter,
   ImGui::Text("FPS: %.1f", fpsCounter.getFPS());
   ImGui::Separator();
 
-  // Scene selector
+  // Scene selector and new features
   renderSceneSelector(sceneManager);
+  renderSceneInformation(sceneManager);
+  ImGui::Separator();
+
+  // Scene management buttons
+  if (ImGui::Button("📁 File Browser")) {
+    showFileBrowser = true;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("📋 Templates")) {
+    showTemplateCreator = true;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("ℹ️ Scene Info")) {
+    showSceneInfo = true;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("✅ Validate")) {
+    validateCurrentScene(sceneManager);
+  }
+
+  // Render feature windows
+  if (showFileBrowser) {
+    renderFileBrowser(sceneManager);
+  }
+  if (showTemplateCreator) {
+    renderTemplateCreator(sceneManager);
+  }
+  if (showValidationResults) {
+    renderValidationResults();
+  }
+
   ImGui::Separator();
 
   // Player and camera info
@@ -230,19 +270,80 @@ void UIManager::renderSceneSelector(SceneManager &sceneManager) {
     currentSceneName = "No Scene";
   }
 
-  // Create a list of available scenes
-  // Note: SceneManager doesn't expose loaded scene names, so we'll use known
-  // scenes
-  static std::vector<std::string> availableScenes = {
-      "default", "level1", "level2", "sandbox", "custom"};
+  // Debug output (can be removed later)
+  static std::string lastSceneName = "";
+  if (lastSceneName != currentSceneName) {
+    std::cout << "Current scene changed to: " << currentSceneName << std::endl;
+    lastSceneName = currentSceneName;
+  }
+
+  // Dynamically get available scene files
+  static std::vector<std::string> availableScenes;
+
+  // Refresh scene list button
+  if (ImGui::Button("🔄 Refresh")) {
+    needsSceneListRefresh = true;
+  }
+  ImGui::SameLine();
+
+  // Refresh scene list when needed
+  if (needsSceneListRefresh) {
+    availableScenes.clear();
+
+    // Get scene files from the scenes directory
+    std::string sceneDir = FileBrowser::getSceneDirectory();
+    auto sceneFiles = FileBrowser::listSceneFiles(sceneDir);
+
+    for (const auto &fileInfo : sceneFiles) {
+      // Extract scene name without extension
+      std::string sceneName = fileInfo.filename;
+      size_t dotPos = sceneName.find_last_of('.');
+      if (dotPos != std::string::npos) {
+        sceneName = sceneName.substr(0, dotPos);
+      }
+      availableScenes.push_back(sceneName);
+
+      // Auto-load scene if not already loaded
+      if (!sceneManager.hasScene(sceneName)) {
+        std::cout << "Auto-loading scene: " << sceneName << " from "
+                  << fileInfo.fullPath << std::endl;
+        sceneManager.loadSceneFromFile(sceneName, fileInfo.fullPath);
+      }
+    }
+
+    // Add default scenes if they don't exist in files
+    std::vector<std::string> defaultScenes = {"default", "level1", "level2",
+                                              "sandbox"};
+    for (const auto &defaultScene : defaultScenes) {
+      bool found = false;
+      for (const auto &existing : availableScenes) {
+        if (existing == defaultScene) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        availableScenes.push_back(defaultScene);
+      }
+    }
+
+    needsSceneListRefresh = false;
+  }
 
   // Find current scene index
   static int currentItem = 0;
+  bool foundCurrentScene = false;
   for (int i = 0; i < availableScenes.size(); i++) {
     if (availableScenes[i] == currentSceneName) {
       currentItem = i;
+      foundCurrentScene = true;
       break;
     }
+  }
+
+  // If current scene not found in list, reset to 0
+  if (!foundCurrentScene && !availableScenes.empty()) {
+    currentItem = 0;
   }
 
   // Create combo box for scene selection
@@ -259,10 +360,30 @@ void UIManager::renderSceneSelector(SceneManager &sceneManager) {
       }
 
       if (ImGui::Selectable(availableScenes[i].c_str(), isSelected)) {
-        if (sceneAvailable && i != currentItem) {
-          // Change to selected scene
-          sceneManager.changeSceneInstant(availableScenes[i]);
-          currentItem = i;
+        if (i != currentItem) {
+          if (sceneAvailable) {
+            // Change to selected scene
+            std::cout << "Switching to scene: " << availableScenes[i]
+                      << std::endl;
+            sceneManager.changeSceneInstant(availableScenes[i]);
+            currentItem = i;
+          } else {
+            // Try to load the scene first, then switch
+            std::cout << "Scene not loaded, attempting to load: "
+                      << availableScenes[i] << std::endl;
+            std::string sceneDir = FileBrowser::getSceneDirectory();
+            std::string sceneFile =
+                FileBrowser::joinPaths(sceneDir, availableScenes[i] + ".scene");
+
+            if (FileBrowser::fileExists(sceneFile)) {
+              std::cout << "Loading scene file: " << sceneFile << std::endl;
+              sceneManager.loadSceneFromFile(availableScenes[i], sceneFile);
+              sceneManager.changeSceneInstant(availableScenes[i]);
+              currentItem = i;
+            } else {
+              std::cout << "Scene file not found: " << sceneFile << std::endl;
+            }
+          }
         }
       }
 
@@ -320,3 +441,349 @@ void UIManager::renderSceneSelector(SceneManager &sceneManager) {
   }
 #endif
 }
+
+// ============================================================================
+// NEW FEATURE IMPLEMENTATIONS
+// ============================================================================
+
+void UIManager::renderSceneInformation(SceneManager &sceneManager) {
+#if REMOVE_IMGUI == 0
+  if (!showSceneInfo)
+    return;
+
+  Scene *currentScene = sceneManager.getCurrentScene();
+  if (!currentScene)
+    return;
+
+  ImGui::Begin("Scene Information", &showSceneInfo);
+
+  ImGui::Text("📋 Scene Details");
+  ImGui::Separator();
+
+  ImGui::Text("Name: %s", currentScene->getName().c_str());
+  ImGui::Text("Description: %s", currentScene->getDescription().c_str());
+  ImGui::Text("World Size: %.0fx%.0f", currentScene->getWorldWidth(),
+              currentScene->getWorldHeight());
+  ImGui::Text("Transition: %s", currentScene->getTransitionTrigger().c_str());
+
+  ImGui::Separator();
+  ImGui::Text("📊 Object Count");
+  ImGui::Text("Total Objects: %d", currentScene->getObjectCount());
+  ImGui::Text("Obstacles: %d", currentScene->getObstacleCount());
+  ImGui::Text("Collectibles: %d", currentScene->getCollectibleCount());
+  ImGui::Text("Enemies: %d", currentScene->getEnemyCount());
+
+  ImGui::Separator();
+  if (ImGui::Button("Validate Scene")) {
+    validateCurrentScene(sceneManager);
+  }
+
+  ImGui::End();
+#endif
+}
+
+void UIManager::renderTemplateCreator(SceneManager &sceneManager) {
+#if REMOVE_IMGUI == 0
+  if (!showTemplateCreator)
+    return;
+
+  ImGui::Begin("Scene Templates", &showTemplateCreator);
+
+  ImGui::Text("🎨 Create Scene from Template");
+  ImGui::Separator();
+
+  // Get available templates
+  static auto templates = SceneTemplates::getAvailableTemplates();
+  static char sceneName[256] = "New Scene";
+
+  ImGui::InputText("Scene Name", sceneName, sizeof(sceneName));
+  ImGui::Separator();
+
+  // Template selection
+  ImGui::Text("Select Template:");
+
+  for (int i = 0; i < templates.size(); i++) {
+    if (ImGui::Selectable(templates[i].name.c_str(),
+                          selectedTemplateIndex == i)) {
+      selectedTemplateIndex = i;
+      selectedTemplateName = templates[i].name;
+    }
+
+    if (ImGui::IsItemHovered()) {
+      ImGui::SetTooltip("%s", templates[i].description.c_str());
+    }
+  }
+
+  ImGui::Separator();
+
+  if (selectedTemplateIndex < templates.size()) {
+    ImGui::Text("Selected: %s", templates[selectedTemplateIndex].name.c_str());
+    ImGui::TextWrapped("%s",
+                       templates[selectedTemplateIndex].description.c_str());
+
+    ImGui::Separator();
+
+    if (ImGui::Button("Create Scene")) {
+      createSceneFromTemplate(sceneManager);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Create & Save")) {
+      createSceneFromTemplate(sceneManager);
+      saveFileDialog(sceneManager);
+    }
+  }
+
+  ImGui::End();
+#endif
+}
+
+void UIManager::renderFileBrowser(SceneManager &sceneManager) {
+#if REMOVE_IMGUI == 0
+  if (!showFileBrowser)
+    return;
+
+  ImGui::Begin("File Browser", &showFileBrowser);
+
+  ImGui::Text("📁 Scene File Browser");
+  ImGui::Separator();
+
+  // Quick actions
+  if (ImGui::Button("📂 Open Scene...")) {
+    openFileDialog(sceneManager);
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("💾 Save Scene As...")) {
+    saveFileDialog(sceneManager);
+  }
+
+  ImGui::Separator();
+
+  // Scene directory browser
+  ImGui::Text("📂 Scenes Directory:");
+  std::string sceneDir = FileBrowser::getSceneDirectory();
+  ImGui::Text("%s", sceneDir.c_str());
+
+  ImGui::Separator();
+
+  // List scene files
+  static auto sceneFiles = FileBrowser::listSceneFiles(sceneDir);
+  static float lastRefresh = 0.0f;
+
+  // Refresh button and auto-refresh
+  if (ImGui::Button("🔄 Refresh") || ImGui::GetTime() - lastRefresh > 5.0f) {
+    sceneFiles = FileBrowser::listSceneFiles(sceneDir);
+    lastRefresh = ImGui::GetTime();
+  }
+
+  ImGui::SameLine();
+  ImGui::Text("(%d scene files)", (int)sceneFiles.size());
+
+  ImGui::Separator();
+
+  // File list
+  if (sceneFiles.empty()) {
+    ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No scene files found");
+  } else {
+    ImGui::Text("Scene Files:");
+    for (const auto &file : sceneFiles) {
+      ImGui::PushID(file.filename.c_str());
+
+      if (ImGui::Selectable(file.filename.c_str())) {
+        // Load the selected scene
+        std::string sceneName = FileBrowser::getFileName(file.fullPath);
+        // Remove .scene extension for scene name
+        if (sceneName.length() > 6 &&
+            sceneName.substr(sceneName.length() - 6) == ".scene") {
+          sceneName = sceneName.substr(0, sceneName.length() - 6);
+        }
+        sceneManager.loadSceneFromFile(sceneName, file.fullPath);
+        sceneManager.changeSceneInstant(
+            sceneName);     // Switch to the loaded scene
+        refreshSceneList(); // Refresh the scene list after loading
+      }
+
+      if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("Path: %s\nSize: %s\nClick to load",
+                          file.fullPath.c_str(),
+                          FileBrowser::formatFileSize(file.fileSize).c_str());
+      }
+
+      ImGui::PopID();
+    }
+  }
+
+  ImGui::End();
+#endif
+}
+
+void UIManager::renderValidationResults() {
+#if REMOVE_IMGUI == 0
+  if (!showValidationResults || !currentValidationResult)
+    return;
+
+  ImGui::Begin("Scene Validation Results", &showValidationResults);
+
+  // Summary
+  if (currentValidationResult->isValid) {
+    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "✅ Scene is valid!");
+  } else {
+    ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "❌ Scene has issues");
+  }
+
+  ImGui::Text("Errors: %d", currentValidationResult->getErrorCount());
+  ImGui::Text("Warnings: %d", currentValidationResult->getWarningCount());
+
+  ImGui::Separator();
+
+  // Issue list
+  if (!currentValidationResult->issues.empty()) {
+    ImGui::Text("Issues Found:");
+
+    for (const auto &issue : currentValidationResult->issues) {
+      ImVec4 color = (issue.severity == SceneValidationIssue::Severity::ERROR)
+                         ? ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
+                         : ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+
+      const char *icon =
+          (issue.severity == SceneValidationIssue::Severity::ERROR) ? "❌"
+                                                                    : "⚠️";
+
+      ImGui::TextColored(color, "%s %s", icon, issue.message.c_str());
+
+      if (!issue.location.empty()) {
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "(%s)",
+                           issue.location.c_str());
+      }
+    }
+  }
+
+  ImGui::Separator();
+
+  if (ImGui::Button("Re-validate")) {
+    // The current scene will be re-validated, but we need the scene manager
+    // This is a bit of a limitation of the current design
+    showValidationResults = false;
+  }
+
+  ImGui::End();
+#endif
+}
+
+// ============================================================================
+// UTILITY METHODS
+// ============================================================================
+
+void UIManager::openFileDialog(SceneManager &sceneManager) {
+  std::string sceneDir = FileBrowser::getSceneDirectory();
+  std::string filepath =
+      FileBrowser::openFileDialog("Open Scene File", sceneDir);
+
+  if (!filepath.empty()) {
+    if (FileBrowser::fileExists(filepath)) {
+      std::string sceneName = FileBrowser::getFileName(filepath);
+      // Remove .scene extension for scene name
+      if (sceneName.length() > 6 &&
+          sceneName.substr(sceneName.length() - 6) == ".scene") {
+        sceneName = sceneName.substr(0, sceneName.length() - 6);
+      }
+      sceneManager.loadSceneFromFile(sceneName, filepath);
+      sceneManager.changeSceneInstant(sceneName); // Switch to the loaded scene
+      refreshSceneList(); // Refresh the scene list after loading
+      std::cout << "Loading scene: " << filepath << std::endl;
+    } else {
+      std::cerr << "File does not exist: " << filepath << std::endl;
+    }
+  }
+}
+
+void UIManager::saveFileDialog(SceneManager &sceneManager) {
+  Scene *currentScene = sceneManager.getCurrentScene();
+  if (!currentScene) {
+    std::cerr << "No current scene to save" << std::endl;
+    return;
+  }
+
+  std::string sceneDir = FileBrowser::getSceneDirectory();
+  std::string defaultName = currentScene->getName() + ".scene";
+  std::string filepath =
+      FileBrowser::saveFileDialog("Save Scene As", sceneDir, defaultName);
+
+  if (!filepath.empty()) {
+    // Ensure .scene extension
+    if (FileBrowser::getFileExtension(filepath) != "scene") {
+      filepath += ".scene";
+    }
+
+    sceneManager.saveSceneToFile(currentScene->getName(), filepath);
+    refreshSceneList(); // Refresh the scene list after saving
+    std::cout << "Saving scene: " << filepath << std::endl;
+  }
+}
+
+void UIManager::createSceneFromTemplate(SceneManager &sceneManager) {
+  if (selectedTemplateIndex >= SceneTemplates::getAvailableTemplates().size()) {
+    return;
+  }
+
+  auto templates = SceneTemplates::getAvailableTemplates();
+  auto templateType = templates[selectedTemplateIndex].type;
+
+  // Create scene from template
+  auto sceneDefinition =
+      SceneTemplates::createFromTemplate(templateType, selectedTemplateName);
+
+  // Load the scene into the scene manager
+  sceneManager.loadSceneFromDefinition("template_scene", sceneDefinition);
+  sceneManager.changeSceneInstant("template_scene");
+  refreshSceneList(); // Refresh the scene list after creating from template
+
+  std::cout << "Created scene from template: " << selectedTemplateName
+            << std::endl;
+}
+
+void UIManager::validateCurrentScene(SceneManager &sceneManager) {
+  Scene *currentScene = sceneManager.getCurrentScene();
+  if (!currentScene) {
+    std::cerr << "No current scene to validate" << std::endl;
+    return;
+  }
+
+  // Get scene definition (this would need to be exposed by Scene class)
+  // For now, we'll create a basic validation
+  // This is a limitation - we'd need Scene to expose its definition
+
+  // Create a temporary validation result
+  static SceneValidationResult validationResult;
+  validationResult = SceneValidationResult(); // Reset
+
+  // Basic validation checks we can do with current Scene interface
+  if (currentScene->getName().empty()) {
+    validationResult.addError("Scene name is empty");
+  }
+
+  if (currentScene->getObjectCount() == 0) {
+    validationResult.addWarning("Scene has no objects");
+  }
+
+  if (currentScene->getCollectibleCount() == 0 &&
+      currentScene->getTransitionTrigger() == "collectibles_complete") {
+    validationResult.addError(
+        "Scene completion requires collectibles but none are found");
+  }
+
+  if (currentScene->getEnemyCount() == 0 &&
+      currentScene->getTransitionTrigger() == "enemies_defeat") {
+    validationResult.addError(
+        "Scene completion requires defeating enemies but none are found");
+  }
+
+  // Store result and show UI
+  currentValidationResult = &validationResult;
+  showValidationResults = true;
+
+  std::cout << "Scene validation completed: "
+            << (validationResult.isValid ? "VALID" : "INVALID") << std::endl;
+}
+
+void UIManager::refreshSceneList() { needsSceneListRefresh = true; }

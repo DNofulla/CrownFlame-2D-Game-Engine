@@ -4,12 +4,26 @@
 #include <glm/glm.hpp>
 #include <string>
 
-// Forward declaration
+// Forward declarations
 class SceneManager;
+class Scene;
+struct SceneValidationResult;
 
 class UIManager {
 private:
   bool initialized;
+
+  // Feature UI state
+  std::string selectedTemplateName;
+  int selectedTemplateIndex;
+  bool showTemplateCreator;
+  bool showFileBrowser;
+  bool showSceneInfo;
+  bool showValidationResults;
+  SceneValidationResult *currentValidationResult;
+
+  // Scene list management
+  bool needsSceneListRefresh;
 
 public:
   UIManager();
@@ -39,4 +53,17 @@ private:
   void renderWorldInfo(GameWorld &gameWorld);
   void renderGameState(GameWorld &gameWorld);
   void renderSceneSelector(SceneManager &sceneManager);
+
+  // New feature UI methods
+  void renderSceneInformation(SceneManager &sceneManager);
+  void renderTemplateCreator(SceneManager &sceneManager);
+  void renderFileBrowser(SceneManager &sceneManager);
+  void renderValidationResults();
+
+  // Utility methods
+  void openFileDialog(SceneManager &sceneManager);
+  void saveFileDialog(SceneManager &sceneManager);
+  void createSceneFromTemplate(SceneManager &sceneManager);
+  void validateCurrentScene(SceneManager &sceneManager);
+  void refreshSceneList(); // Trigger scene list refresh
 };

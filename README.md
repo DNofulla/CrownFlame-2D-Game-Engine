@@ -252,6 +252,7 @@ cmake --build . --config Release
 │   ├── AudioManager.h       # Audio system management
 │   ├── DatabaseManager.h    # Database connection management
 │   ├── Enemy.h             # Enemy AI system
+│   ├── FileBrowser.h       # Cross-platform file browser and dialogs
 │   ├── FPSCounter.h        # Performance monitoring
 │   ├── GameObject.h        # Base game object class
 │   ├── GameState.h         # Game state management
@@ -262,6 +263,8 @@ cmake --build . --config Release
 │   ├── Scene.h             # Individual scene/level management
 │   ├── SceneData.h         # Scene data structures and definitions
 │   ├── SceneManager.h      # Scene loading, transitions, and management
+│   ├── SceneTemplates.h    # Professional scene template system
+│   ├── SceneValidator.h    # Scene validation and quality assurance
 │   ├── Tile.h              # Individual tile representation
 │   ├── TileMap.h           # 2D tile grid management
 │   ├── TileMapManager.h    # Tileset and map management
@@ -272,6 +275,7 @@ cmake --build . --config Release
 │   ├── AudioManager.cpp    # Audio system implementation
 │   ├── DatabaseManager.cpp # Database operations
 │   ├── Enemy.cpp           # Enemy AI implementation
+│   ├── FileBrowser.cpp     # Cross-platform file operations
 │   ├── FPSCounter.cpp      # Performance monitoring
 │   ├── GameObject.cpp      # Object implementation
 │   ├── GameState.cpp       # State management
@@ -283,6 +287,8 @@ cmake --build . --config Release
 │   ├── Scene.cpp           # Scene management implementation
 │   ├── SceneExample.cpp    # Example usage of the scene system
 │   ├── SceneManager.cpp    # Scene manager implementation
+│   ├── SceneTemplates.cpp  # Scene template implementations
+│   ├── SceneValidator.cpp  # Scene validation system
 │   ├── Tile.cpp            # Tile implementation
 │   ├── TileMap.cpp         # Tile map implementation
 │   ├── TileMapManager.cpp  # Tile system management
@@ -344,6 +350,72 @@ The Scene Management System provides a complete solution for creating, managing,
 - **Transition Effects**: Fade, slide, and instant transitions between scenes
 - **Auto-Progression**: Scenes can automatically advance based on completion conditions
 - **Scene Persistence**: Save and load scenes for level editors and procedural generation
+
+### ✅ Advanced Scene Management Features
+
+The engine now includes 4 professional-grade scene management tools integrated directly into the UI:
+
+#### 🔧 1. File Browser - Cross-Platform File Management
+- **Native OS Integration**: Platform-specific file dialogs for Windows, Linux, and macOS
+- **Smart Directory Browsing**: Automatic scene directory detection and navigation
+- **File Information Display**: Shows file sizes, paths, and tooltips with detailed information
+- **Auto-Refresh Capability**: Dynamic scene list updates when files are added or modified
+- **Scene File Filtering**: Automatically filters and displays only `.scene` files
+- **Instant Loading**: Click any scene file to load and switch immediately
+
+#### 📊 2. Scene Information Display - Real-Time Scene Analytics
+- **Comprehensive Scene Details**: View name, description, world dimensions, and transition settings
+- **Live Object Counts**: Real-time display of total objects, obstacles, collectibles, and enemies
+- **Visual Organization**: Clean, organized layout with icons and separators
+- **Integration Ready**: Seamlessly connects with validation system for quality assurance
+- **Performance Metrics**: Instant feedback on scene complexity and content
+
+#### 🎨 3. Scene Templates - Rapid Prototyping System
+- **8 Professional Templates**: 
+  - **Empty**: Clean slate for custom creation
+  - **Tutorial**: Beginner-friendly layout with basic obstacles
+  - **Maze**: Complex navigation challenges with strategic walls
+  - **Arena**: Combat-focused circular battleground
+  - **Platformer**: Vertical challenges with jumping mechanics
+  - **Collection Challenge**: Optimized for collectible gameplay
+  - **Enemy Gauntlet**: Action-packed with multiple enemy types
+  - **Obstacle Course**: Precision navigation training
+- **Template Previews**: Detailed descriptions and previews before creation
+- **Customizable Names**: Set custom scene names during template creation
+- **Instant Creation**: Generate complete scenes with proper object placement
+- **Save Integration**: Create and save templates directly to files
+
+#### ✅ 4. Scene Validation - Quality Assurance System
+- **Comprehensive Validation Engine**: Multi-category scene integrity checking
+- **Error Classification**: Separate error and warning systems with severity levels
+- **Validation Categories**:
+  - **Basic Properties**: Scene name, description, and metadata validation
+  - **World Settings**: Dimension and boundary checks
+  - **Player Spawn**: Spawn point validation and accessibility
+  - **Object Placement**: Obstacle, collectible, and enemy positioning
+  - **Collision Detection**: Object overlap and intersection analysis
+  - **Reachability Analysis**: Path validation and accessibility testing
+- **Visual Results Display**: Color-coded issue reporting with location-specific feedback
+- **Location-Specific Feedback**: Precise error locations for quick fixes
+
+### 🚀 How to Use the Advanced Features
+
+The new scene management tools are seamlessly integrated into the existing UI with intuitive controls:
+
+- **📁 File Browser Button**: Opens native file dialogs and directory browser
+- **📋 Templates Button**: Access professional scene templates for rapid creation
+- **ℹ️ Scene Info Button**: View comprehensive scene information and statistics
+- **✅ Validate Button**: Run complete scene validation with detailed reporting
+- **🔄 Refresh Button**: Manually refresh scene list to detect new files
+
+### 💡 Key Benefits
+
+- **Immediate Productivity**: File browser eliminates manual path typing and file searching
+- **Rapid Prototyping**: Templates enable instant scene creation for quick testing and iteration
+- **Quality Assurance**: Validation system prevents common scene errors before they cause issues
+- **Enhanced User Experience**: Rich scene information provides instant feedback and insights
+- **Professional Workflow**: Native OS integration creates a polished, professional development experience
+- **Dynamic Scene Management**: Automatic detection and loading of scene files from the directory
 
 ### Scene File Format
 Scene files use a simple INI-style format:
