@@ -149,6 +149,27 @@ bool Application::initializeGame() {
     return false;
   }
 
+  // Load example scenes from files (if they exist)
+  sceneManager.loadSceneFromFile("level1",
+                                 RESOURCES_PATH "scenes/level1.scene");
+  sceneManager.loadSceneFromFile("level2",
+                                 RESOURCES_PATH "scenes/level2.scene");
+  sceneManager.loadSceneFromFile("sandbox",
+                                 RESOURCES_PATH "scenes/sandbox.scene");
+
+  // Create a custom scene programmatically
+  auto customScene = SceneManager::createDefaultScene("custom");
+  customScene.name = "Custom Scene";
+  customScene.description = "Programmatically created scene";
+  customScene.playerSpawn.x = 200.0f;
+  customScene.playerSpawn.y = 200.0f;
+  // Add different collectible positions
+  customScene.collectibles.clear();
+  customScene.collectibles.emplace_back(350.0f, 250.0f);
+  customScene.collectibles.emplace_back(550.0f, 100.0f);
+  customScene.collectibles.emplace_back(450.0f, 450.0f);
+  sceneManager.loadSceneFromDefinition("custom", customScene);
+
   // Change to default scene
   if (!sceneManager.changeSceneInstant("default")) {
     std::cerr << "Failed to activate default scene!" << std::endl;
@@ -248,8 +269,9 @@ void Application::render() {
     sceneManager.render(&renderer);
     renderer.flush();
 
-    // Render UI using current game world
-    uiManager.renderGameUI(*currentGameWorld, fpsCounter, playerSpeed);
+    // Render UI using current game world and scene manager
+    uiManager.renderGameUI(*currentGameWorld, fpsCounter, playerSpeed,
+                           sceneManager);
   } else {
     // Fallback: render default camera
     camera.position = glm::vec2(0, 0);

@@ -2,6 +2,10 @@
 #include "FPSCounter.h"
 #include "GameWorld.h"
 #include <glm/glm.hpp>
+#include <string>
+
+// Forward declaration
+class SceneManager;
 
 class UIManager {
 private:
@@ -24,10 +28,15 @@ public:
   void renderGameUI(GameWorld &gameWorld, const FPSCounter &fpsCounter,
                     float &playerSpeed);
 
+  // UI rendering with scene management
+  void renderGameUI(GameWorld &gameWorld, const FPSCounter &fpsCounter,
+                    float &playerSpeed, SceneManager &sceneManager);
+
 private:
   // Helper methods for different UI sections
   void renderPlayerInfo(GameObject *player, const glm::vec2 &cameraPos);
   void renderControls();
   void renderWorldInfo(GameWorld &gameWorld);
   void renderGameState(GameWorld &gameWorld);
+  void renderSceneSelector(SceneManager &sceneManager);
 };

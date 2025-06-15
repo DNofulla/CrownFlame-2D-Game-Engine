@@ -5,7 +5,6 @@
 #include <iostream>
 #include <sstream>
 
-
 SceneManager::SceneManager()
     : currentScene(nullptr), nextScene(nullptr), isTransitioning(false),
       transitionProgress(0.0f), transitionTimer(0.0f), screenWidth(800),
