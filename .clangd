@@ -1,0 +1,38 @@
+CompileFlags:
+  Add:
+    - -x
+    - c++
+    - -std=c++17
+    - -DGLFW_INCLUDE_NONE=1
+    - -D_CRT_SECURE_NO_WARNINGS
+    - -DPRODUCTION_BUILD=0
+    - -DREMOVE_IMGUI=0
+    - -DUNICODE
+    - -D_UNICODE
+    - -DRESOURCES_PATH="./resources/"
+    - -Iinclude
+    - -Isrc
+    - -Ithirdparty/glfw-3.3.2/include
+    - -Ithirdparty/glad/include
+    - -Ithirdparty/stb_image/include
+    - -Ithirdparty/stb_truetype/include
+    - -Ithirdparty/raudio/include
+    - -Ithirdparty/glm
+    - -Ithirdparty/sqlite-amalgamation
+    - -Ithirdparty/imgui-docking
+    - -Ithirdparty/imgui-docking/imgui
+    - -Ithirdparty/gl2d/include
+    - -Ithirdparty/gl2d/src
+
+Index:
+  Background: Skip
+
+Diagnostics:
+  UnusedIncludes: None
+  MissingIncludes: None
+
+InlayHints:
+  Enabled: false
+
+Hover:
+  ShowAKA: true 
