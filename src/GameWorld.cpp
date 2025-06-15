@@ -8,7 +8,8 @@ GameWorld::GameWorld()
     : player(nullptr), screenWidth(640), screenHeight(480),
       cameraPosition(0.0f, 0.0f), cameraFollowSpeed(5.0f),
       cameraFollowEnabled(true), worldWidth(2000.0f), worldHeight(1500.0f),
-      pigTexture(nullptr), gameFont(nullptr), audioManager(nullptr) {}
+      pigTexture(nullptr), gameFont(nullptr), audioManager(nullptr),
+      currentPathIndex(0), followingPath(false) {}
 
 GameWorld::~GameWorld() {
   gameObjects.clear();
@@ -99,6 +100,11 @@ void GameWorld::initialize(int width, int height) {
 
   // Reset game state
   gameStateManager.resetGame();
+
+  // Initialize pathfinding
+  currentPath.clear();
+  currentPathIndex = 0;
+  followingPath = false;
 }
 
 void GameWorld::addObject(std::unique_ptr<GameObject> object) {
@@ -191,6 +197,10 @@ void GameWorld::update(float deltaTime) {
 
     // Update enemies
     updateEnemies(deltaTime);
+
+    // Update pathfinding (will be called from Application with player speed)
+    // updatePathfinding(deltaTime, playerSpeed); // This will be called from
+    // Application
 
     // Check collisions
     handleCollisions();
@@ -294,6 +304,9 @@ void GameWorld::render(void *rendererPtr) {
                                *texture);
     }
   }
+
+  // Render pathfinding path
+  renderPath(rendererPtr);
 
   // Render game over banner on top of everything
   renderGameOverBanner(rendererPtr);
@@ -400,7 +413,15 @@ void GameWorld::updateCamera(float deltaTime) {
 }
 
 bool GameWorld::initializeTileSystem() {
-  // Create a default grass map
+  // Check if we already have a current map (during reset)
+  if (tileMapManager.getCurrentMap()) {
+    // Reset the existing tilemap by regenerating its content
+    tileMapManager.resetCurrentMap();
+    std::cout << "Tile system reset successfully" << std::endl;
+    return true;
+  }
+
+  // Create a default grass map if it doesn't exist (first time initialization)
   if (!tileMapManager.createDefaultGrassMap("main_world", 100, 75)) {
     std::cerr << "Failed to create default grass map" << std::endl;
     return false;
@@ -408,4 +429,144 @@ bool GameWorld::initializeTileSystem() {
 
   std::cout << "Tile system initialized successfully" << std::endl;
   return true;
+}
+
+void GameWorld::handleMouseInput(const glm::vec2 &mouseScreenPos) {
+  if (!player || gameStateManager.isGameOver()) {
+    return;
+  }
+
+  // Convert screen position to world position
+  glm::vec2 targetWorldPos = screenToWorldPosition(mouseScreenPos);
+
+  // Get player center position
+  glm::vec2 playerCenter = player->getCenter();
+
+  // Find path from player to target
+  std::vector<glm::vec2> newPath =
+      Pathfinder::findPath(playerCenter, targetWorldPos, gameObjects,
+                           player->bounds.width, player->bounds.height);
+
+  if (!newPath.empty()) {
+    currentPath = newPath;
+    currentPathIndex = 0;
+    followingPath = true;
+
+    std::cout << "Path found with " << currentPath.size() << " waypoints"
+              << std::endl;
+  } else {
+    std::cout << "No path found to target position" << std::endl;
+    followingPath = false;
+  }
+}
+
+void GameWorld::updatePathfinding(float deltaTime, float playerSpeed) {
+  if (!followingPath || !player || currentPath.empty()) {
+    return;
+  }
+
+  // Always move towards the final destination
+  glm::vec2 destination = currentPath.back();
+  glm::vec2 playerCenter = player->getCenter();
+
+  // Calculate direction to destination
+  glm::vec2 direction = destination - playerCenter;
+  float distance = glm::length(direction);
+
+  // Check if we've reached the destination
+  if (distance < 15.0f) {
+    followingPath = false;
+    currentPath.clear();
+    return;
+  }
+
+  // Move towards the destination
+  glm::vec2 normalizedDirection = glm::normalize(direction);
+  float moveDistance = playerSpeed * deltaTime;
+
+  // Calculate new position (center the player on the movement)
+  glm::vec2 newPlayerPos = playerCenter + normalizedDirection * moveDistance;
+  newPlayerPos.x -= player->bounds.width / 2.0f;
+  newPlayerPos.y -= player->bounds.height / 2.0f;
+
+  // Check for collisions and move player
+  if (!checkPlayerCollisions(newPlayerPos.x, newPlayerPos.y)) {
+    player->setPosition(newPlayerPos.x, newPlayerPos.y);
+  } else {
+    // If collision detected, try to follow the waypoints in the path
+    if (currentPath.size() > 1 && currentPathIndex < currentPath.size() - 1) {
+      // Move to next waypoint in the path
+      currentPathIndex++;
+      glm::vec2 nextWaypoint = currentPath[currentPathIndex];
+      glm::vec2 waypointDirection = nextWaypoint - playerCenter;
+      float waypointDistance = glm::length(waypointDirection);
+
+      if (waypointDistance > 1.0f) {
+        glm::vec2 normalizedWaypointDir = glm::normalize(waypointDirection);
+        glm::vec2 waypointPos =
+            playerCenter + normalizedWaypointDir * moveDistance;
+        waypointPos.x -= player->bounds.width / 2.0f;
+        waypointPos.y -= player->bounds.height / 2.0f;
+
+        if (!checkPlayerCollisions(waypointPos.x, waypointPos.y)) {
+          player->setPosition(waypointPos.x, waypointPos.y);
+          return;
+        }
+      }
+    }
+
+    // If still blocked, recalculate path
+    std::vector<glm::vec2> newPath =
+        Pathfinder::findPath(playerCenter, destination, gameObjects,
+                             player->bounds.width, player->bounds.height);
+
+    if (!newPath.empty()) {
+      currentPath = newPath;
+      currentPathIndex = 0;
+    } else {
+      followingPath = false;
+      currentPath.clear();
+    }
+  }
+}
+
+void GameWorld::stopPathfinding() {
+  followingPath = false;
+  currentPath.clear();
+  currentPathIndex = 0;
+}
+
+glm::vec2 GameWorld::screenToWorldPosition(const glm::vec2 &screenPos) const {
+  return glm::vec2(screenPos.x + cameraPosition.x,
+                   screenPos.y + cameraPosition.y);
+}
+
+void GameWorld::renderPath(void *rendererPtr) {
+  if (!followingPath || currentPath.empty()) {
+    return;
+  }
+
+  gl2d::Renderer2D &renderer = *static_cast<gl2d::Renderer2D *>(rendererPtr);
+  gl2d::Color4f destinationColor = {1.0f, 1.0f, 0.0f,
+                                    1.0f}; // Yellow destination
+
+  // Only render the final destination waypoint
+  if (!currentPath.empty()) {
+    glm::vec2 destination = currentPath.back();
+    float destinationSize = 12.0f;
+
+    // Render destination as a larger yellow square
+    renderer.renderRectangle({destination.x - destinationSize / 2,
+                              destination.y - destinationSize / 2,
+                              destinationSize, destinationSize},
+                             destinationColor);
+
+    // Add a smaller inner square for visual contrast
+    gl2d::Color4f innerColor = {1.0f, 0.5f, 0.0f, 1.0f}; // Orange inner
+    float innerSize = 6.0f;
+    renderer.renderRectangle({destination.x - innerSize / 2,
+                              destination.y - innerSize / 2, innerSize,
+                              innerSize},
+                             innerColor);
+  }
 }

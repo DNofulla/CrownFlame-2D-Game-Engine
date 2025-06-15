@@ -1,6 +1,8 @@
 #include "InputManager.h"
 
-InputManager::InputManager(GLFWwindow *window) : window(window) {}
+InputManager::InputManager(GLFWwindow *window)
+    : window(window), rightMousePressed(false), rightMouseJustPressed(false),
+      mousePosition(0.0f, 0.0f) {}
 
 glm::vec2 InputManager::getMovementInput() const {
   glm::vec2 movement(0.0f, 0.0f);
@@ -28,5 +30,14 @@ bool InputManager::isKeyPressed(int key) const {
 }
 
 void InputManager::update() {
-  // For future use - could track key state changes here
+  // Update mouse position
+  double xpos, ypos;
+  glfwGetCursorPos(window, &xpos, &ypos);
+  mousePosition = glm::vec2(static_cast<float>(xpos), static_cast<float>(ypos));
+
+  // Check right mouse button state
+  bool currentRightPressed =
+      glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+  rightMouseJustPressed = currentRightPressed && !rightMousePressed;
+  rightMousePressed = currentRightPressed;
 }

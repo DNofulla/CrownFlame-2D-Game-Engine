@@ -6,6 +6,11 @@ class InputManager {
 private:
   GLFWwindow *window;
 
+  // Mouse state
+  bool rightMousePressed;
+  bool rightMouseJustPressed;
+  glm::vec2 mousePosition;
+
 public:
   InputManager(GLFWwindow *window);
 
@@ -16,9 +21,14 @@ public:
   bool isExitPressed() const;
   bool isRestartPressed() const;
 
+  // Mouse input
+  bool isRightMousePressed() const { return rightMousePressed; }
+  bool isRightMouseJustPressed() const { return rightMouseJustPressed; }
+  glm::vec2 getMousePosition() const { return mousePosition; }
+
   // General key checking
   bool isKeyPressed(int key) const;
 
-  // Update method (for future key state tracking if needed)
+  // Update method (for tracking mouse state changes)
   void update();
 };

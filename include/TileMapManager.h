@@ -48,6 +48,9 @@ public:
 
   // Utility functions
   void clearAll();
+  void
+  resetCurrentMap(); // Reset the current map's content without destroying it
+  bool resetMap(const std::string &mapName); // Reset a specific map's content
   std::vector<std::string> getTilesetNames() const;
   std::vector<std::string> getTileMapNames() const;
 

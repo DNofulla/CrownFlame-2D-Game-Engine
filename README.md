@@ -43,6 +43,17 @@ Vertex & Fragment Shaders, Memory Management, Parallelization with CUDA and much
 - **Smooth Movement**: Delta-time based movement system for consistent gameplay across different frame rates
 - **Collision Detection**: Advanced collision system prevents movement through obstacles
 
+### Movement Systems
+- **Keyboard Movement**: Traditional WASD/Arrow key controls for direct player movement
+- **Intelligent Pathfinding**: Right-click anywhere to automatically move the player to that location
+  - **Direct Line Movement**: Player moves in straight lines when path is clear
+  - **Obstacle Avoidance**: Automatically navigates around walls and obstacles using A* pathfinding algorithm
+  - **Smart Route Planning**: Calculates shortest safe path when direct route is blocked
+  - **Visual Feedback**: Yellow destination marker shows where the player will move
+  - **Safety Buffer**: 10-pixel buffer around obstacles prevents getting stuck against walls
+  - **Consistent Speed**: Pathfinding uses same movement speed as keyboard controls
+  - **Keyboard Override**: WASD keys immediately cancel pathfinding for manual control
+
 ### Enemy System
 - **AI Enemies**: 7 pig enemies with intelligent movement patterns using `pig.png` sprite
 - **4 Movement Patterns**:
@@ -119,6 +130,7 @@ Vertex & Fragment Shaders, Memory Management, Parallelization with CUDA and much
 ### Movement
 - **WASD Keys**: Primary movement controls
 - **Arrow Keys**: Alternative movement controls
+- **Right-Click**: Pathfinding movement - click anywhere to move the player to that location
 - **ESC**: Exit game
 - **R Key**: Restart game when game over
 
@@ -141,6 +153,7 @@ Vertex & Fragment Shaders, Memory Management, Parallelization with CUDA and much
   - `InputManager`: Input handling and processing
   - `UIManager`: User interface management
   - `FPSCounter`: Performance monitoring
+  - `Pathfinder`: A* pathfinding algorithm implementation for intelligent navigation
 
 ### Database Features
 - **SQLite Integration**: Embedded database for persistent storage
@@ -171,6 +184,16 @@ Vertex & Fragment Shaders, Memory Management, Parallelization with CUDA and much
 - **Texture Support**: Sprite rendering for enemies using PNG assets
 - **Layered Rendering**: Proper render order with overlays
 - **Camera-relative Rendering**: All objects render correctly with camera movement
+
+### Pathfinding System
+- **A* Algorithm**: Industry-standard pathfinding with heuristic optimization
+- **Grid-Based Navigation**: 25-pixel grid system for efficient path calculation
+- **Intelligent Route Selection**: Attempts direct path first, falls back to A* when blocked
+- **Collision-Aware**: Integrates with existing collision detection system
+- **Safety Margins**: 10-pixel buffer around obstacles prevents collision issues
+- **Visual Debugging**: Destination markers and path visualization
+- **Performance Optimized**: Efficient grid representation and path caching
+- **Mouse Integration**: Seamless right-click to move functionality
 
 ### Resource Management
 - **Automatic Asset Loading**: Textures and fonts loaded on demand
@@ -223,6 +246,7 @@ cmake --build . --config Release
 │   ├── GameWorld.h         # World management
 │   ├── InputManager.h      # Input handling
 │   ├── openglErrorReporting.h # OpenGL debugging
+│   ├── Pathfinder.h        # A* pathfinding algorithm
 │   ├── Tile.h              # Individual tile representation
 │   ├── TileMap.h           # 2D tile grid management
 │   ├── TileMapManager.h    # Tileset and map management
@@ -240,6 +264,7 @@ cmake --build . --config Release
 │   ├── InputManager.cpp    # Input processing
 │   ├── main.cpp            # Application entry point
 │   ├── openglErrorReporting.cpp # OpenGL error handling
+│   ├── Pathfinder.cpp      # A* pathfinding implementation
 │   ├── Tile.cpp            # Tile implementation
 │   ├── TileMap.cpp         # Tile map implementation
 │   ├── TileMapManager.cpp  # Tile system management

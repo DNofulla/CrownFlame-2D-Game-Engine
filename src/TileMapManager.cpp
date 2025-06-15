@@ -141,6 +141,28 @@ void TileMapManager::clearAll() {
   std::cout << "Cleared all tilesets and tile maps" << std::endl;
 }
 
+void TileMapManager::resetCurrentMap() {
+  if (currentMap) {
+    currentMap->createGrassMap();
+    std::cout << "Reset current map: " << currentMap->getName() << std::endl;
+  } else {
+    std::cerr << "Cannot reset current map: no current map set" << std::endl;
+  }
+}
+
+bool TileMapManager::resetMap(const std::string &mapName) {
+  TileMap *map = getTileMap(mapName);
+  if (map) {
+    map->createGrassMap();
+    std::cout << "Reset map: " << mapName << std::endl;
+    return true;
+  } else {
+    std::cerr << "Cannot reset map '" << mapName << "': map not found"
+              << std::endl;
+    return false;
+  }
+}
+
 std::vector<std::string> TileMapManager::getTilesetNames() const {
   std::vector<std::string> names;
   names.reserve(tilesets.size());

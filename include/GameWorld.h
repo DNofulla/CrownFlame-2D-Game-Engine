@@ -2,6 +2,7 @@
 #include "Enemy.h"
 #include "GameObject.h"
 #include "GameState.h"
+#include "Pathfinder.h"
 #include "TileMapManager.h"
 #include <glm/glm.hpp>
 #include <memory>
@@ -40,6 +41,11 @@ private:
   // Tile system
   TileMapManager tileMapManager;
 
+  // Pathfinding system
+  std::vector<glm::vec2> currentPath;
+  int currentPathIndex;
+  bool followingPath;
+
 public:
   GameWorld();
   ~GameWorld();
@@ -62,6 +68,13 @@ public:
   void update(float deltaTime);
   void updatePlayer(float moveX, float moveY, float speed, float deltaTime);
 
+  // Pathfinding
+  void handleMouseInput(const glm::vec2 &mouseScreenPos);
+  void updatePathfinding(float deltaTime, float playerSpeed);
+  void stopPathfinding();
+  bool isFollowingPath() const { return followingPath; }
+  glm::vec2 screenToWorldPosition(const glm::vec2 &screenPos) const;
+
   // Collision handling
   void handleCollisions();
   bool checkPlayerCollisions(float newX, float newY);
@@ -69,6 +82,7 @@ public:
   // Rendering
   void render(void *renderer);
   void renderGameOverBanner(void *renderer);
+  void renderPath(void *renderer);
 
   // Getters
   GameObject *getPlayer() const { return player; }

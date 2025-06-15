@@ -161,14 +161,30 @@ void Application::update(float deltaTime) {
   glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
   gameWorld.updateScreenSize(windowWidth, windowHeight);
 
-  // Only allow player movement if game is playing
+  // Handle mouse input for pathfinding
+  if (inputManager->isRightMouseJustPressed() &&
+      gameWorld.getGameStateManager().isPlaying()) {
+    gameWorld.handleMouseInput(inputManager->getMousePosition());
+  }
+
+  // Only allow player movement if game is playing and not following a path
   if (gameWorld.getGameStateManager().isPlaying()) {
     glm::vec2 movement = inputManager->getMovementInput();
-    gameWorld.updatePlayer(movement.x, movement.y, playerSpeed, deltaTime);
+    // Only allow keyboard movement if not following a path
+    if (glm::length(movement) > 0.1f) {
+      // Cancel pathfinding if player uses keyboard
+      gameWorld.stopPathfinding();
+      gameWorld.updatePlayer(movement.x, movement.y, playerSpeed, deltaTime);
+    }
   }
 
   gameWorld.updateCamera(deltaTime);
   gameWorld.update(deltaTime);
+
+  // Update pathfinding with actual player speed
+  if (gameWorld.getGameStateManager().isPlaying()) {
+    gameWorld.updatePathfinding(deltaTime, playerSpeed);
+  }
 }
 
 void Application::render() {
