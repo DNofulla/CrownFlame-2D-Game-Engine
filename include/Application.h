@@ -4,6 +4,7 @@
 #include "GameWorld.h"
 #include "InputManager.h"
 #include "SceneManager.h"
+#include "Settings.h"
 #include "UIManager.h"
 #include <GLFW/glfw3.h>
 #include <gl2d/gl2d.h>
@@ -23,6 +24,7 @@ private:
   InputManager *inputManager;
   UIManager uiManager;
   AudioManager audioManager;
+  Settings settings; // Settings management system
 
   // Game settings
   float playerSpeed;
@@ -49,6 +51,9 @@ public:
   void restartCurrentScene();
   SceneManager &getSceneManager() { return sceneManager; }
 
+  // Settings access
+  Settings &getSettings() { return settings; }
+
 private:
   // Initialization helpers
   bool initializeWindow(int width, int height, const char *title);
@@ -62,4 +67,7 @@ private:
 
   // Event callbacks
   static void errorCallback(int error, const char *description);
+
+  // Window management callbacks
+  static void windowCloseCallback(GLFWwindow *window);
 };

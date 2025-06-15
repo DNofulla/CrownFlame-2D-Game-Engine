@@ -51,6 +51,11 @@ void Application::run() {
 }
 
 void Application::shutdown() {
+  // Save window settings before shutdown
+  if (window) {
+    settings.saveCurrentWindowState(window);
+  }
+
   // Shutdown scene manager
   sceneManager.shutdown();
 
@@ -95,6 +100,13 @@ bool Application::initializeWindow(int width, int height, const char *title) {
 
   windowWidth = width;
   windowHeight = height;
+
+  // Set up window close callback to save settings
+  glfwSetWindowUserPointer(window, this);
+  glfwSetWindowCloseCallback(window, windowCloseCallback);
+
+  // Try to restore window to the last monitor it was on
+  settings.restoreMonitorSettings(window);
 
   glfwMakeContextCurrent(window);
   return true;
@@ -293,6 +305,17 @@ void Application::handleEvents() {
 
 void Application::errorCallback(int error, const char *description) {
   std::cout << "GLFW Error (" << error << "): " << description << std::endl;
+}
+
+void Application::windowCloseCallback(GLFWwindow *window) {
+  // Get the Application instance from the window user pointer
+  Application *app =
+      static_cast<Application *>(glfwGetWindowUserPointer(window));
+  if (app) {
+    // Save the current window state before closing
+    app->settings.saveCurrentWindowState(window);
+    std::cout << "Window closing - settings saved." << std::endl;
+  }
 }
 
 // Scene management methods

@@ -174,6 +174,15 @@ Vertex & Fragment Shaders, Memory Management, Parallelization with CUDA and much
 - **Foreign Key Support**: Enabled foreign key constraints for referential integrity
 - **Directory Management**: Automatic creation of database directory structure
 
+### Settings Management System
+- **Monitor Persistence**: Game automatically restores to the monitor it was last closed on
+- **Multi-Monitor Support**: Intelligent detection of which monitor contains the most window area
+- **Window State Restoration**: Saves and restores window position and size
+- **Configuration File**: Settings stored in `resources/settings.cfg` using simple key-value format
+- **First-Run Detection**: Graceful handling of initial startup without saved settings
+- **Safe Monitor Recovery**: Handles disconnected monitors by falling back to primary display
+- **Automatic Settings Save**: Window state saved both on close and on application shutdown
+
 ### Audio Features
 - **raudio Integration**: Powered by the raudio library for cross-platform audio
 - **Sound Management**: Load, unload, and organize sounds by name
