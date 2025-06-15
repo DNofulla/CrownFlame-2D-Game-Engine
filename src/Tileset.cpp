@@ -142,7 +142,7 @@ void Tileset::setupGrassTiles() {
 
   // Load all tiles
   for (const auto &info : tileInfos) {
-    std::string fullPath = RESOURCES_PATH "tiles/" + info.filename;
+    std::string fullPath = RESOURCES_PATH "textures/tiles/" + info.filename;
     if (loadTileFromFile(info.id, info.name, fullPath)) {
       Tile *tile = getTile(info.id);
       if (tile) {

@@ -527,7 +527,7 @@ AudioManager audioManager;
 audioManager.initialize();
 
 // Load sounds
-audioManager.loadSound("pickup", "resources/pickup.mp3");
+audioManager.loadSound("collectible_pickup", "resources/audio/collectible_pickup.mp3");
 
 // Play sounds
 audioManager.playSound("pickup");           // Single playback
@@ -539,9 +539,17 @@ audioManager.setSoundVolume("pickup", 0.5f);
 ```
 
 ### Audio File Requirements
-- **File Location**: Place audio files in the `resources/` directory
+- **File Location**: Place audio files in the `resources/audio/` directory
 - **Collectible Sound**: Requires `collectible_pickup.mp3` for pickup sound effects
 - **Recommended Formats**: MP3 for compatibility, WAV for low latency
+
+### Resource Directory Structure
+The project organizes resources into the following structure:
+- `resources/audio/` - Audio files (sound effects, music)
+- `resources/textures/` - All texture files
+  - `resources/textures/sprites/` - Character and object sprites (e.g., pig.png)
+  - `resources/textures/tiles/` - Tile textures for the tile system
+- `resources/scenes/` - Scene definition files
 
 ## 🚀 Future Enhancement Possibilities
 

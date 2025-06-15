@@ -125,7 +125,7 @@ bool Application::initializeGame() {
   } else {
     // Load collectible pickup sound
     audioManager.loadSound("collectible_pickup",
-                           RESOURCES_PATH "collectible_pickup.mp3");
+                           RESOURCES_PATH "audio/collectible_pickup.mp3");
   }
 
   // Initialize UI manager

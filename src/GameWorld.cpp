@@ -46,7 +46,7 @@ void GameWorld::initialize(int width, int height) {
   if (!pigTexture) {
     pigTexture = new gl2d::Texture();
     static_cast<gl2d::Texture *>(pigTexture)
-        ->loadFromFile(RESOURCES_PATH "pig.png");
+        ->loadFromFile(RESOURCES_PATH "textures/sprites/pig.png");
   }
 
   // Load font if not already loaded
@@ -125,7 +125,7 @@ void GameWorld::initializeEmpty(int width, int height) {
   if (!pigTexture) {
     pigTexture = new gl2d::Texture();
     static_cast<gl2d::Texture *>(pigTexture)
-        ->loadFromFile(RESOURCES_PATH "pig.png");
+        ->loadFromFile(RESOURCES_PATH "textures/sprites/pig.png");
   }
 
   // Load font if not already loaded
