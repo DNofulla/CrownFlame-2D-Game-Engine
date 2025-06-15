@@ -16,6 +16,11 @@ bool DatabaseManager::initialize(const std::string &databasePath) {
     return false;
   }
 
+  if (databasePath.empty()) {
+    std::cerr << "Database path cannot be empty." << std::endl;
+    return false;
+  }
+
   m_databasePath = databasePath;
 
   // Create the directory if it doesn't exist
@@ -39,8 +44,10 @@ bool DatabaseManager::initialize(const std::string &databasePath) {
   if (result != SQLITE_OK) {
     std::cerr << "Failed to open database: " << sqlite3_errmsg(m_database)
               << std::endl;
-    sqlite3_close(m_database);
-    m_database = nullptr;
+    if (m_database) {
+      sqlite3_close(m_database);
+      m_database = nullptr;
+    }
     return false;
   }
 

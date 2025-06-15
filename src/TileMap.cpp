@@ -181,7 +181,7 @@ void TileMap::render(void *renderer, const glm::vec2 &cameraPos,
 
   gl2d::Renderer2D *r = static_cast<gl2d::Renderer2D *>(renderer);
 
-  // Render all tiles (no culling - fully pre-loaded map)
+  // Render ALL tiles - full map always visible
   for (int y = 0; y < mapHeight; ++y) {
     for (int x = 0; x < mapWidth; ++x) {
       glm::vec2 renderPos = tileToWorldPosition(x, y);

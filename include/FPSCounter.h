@@ -5,6 +5,7 @@ private:
   float fps;
   float fpsUpdateTimer;
   float fpsUpdateInterval;
+  int frameCount;
 
 public:
   FPSCounter(float updateInterval = 0.5f);

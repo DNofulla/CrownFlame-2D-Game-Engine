@@ -109,4 +109,5 @@ public:
   // Tile map management
   TileMapManager &getTileMapManager() { return tileMapManager; }
   bool initializeTileSystem();
+  void verifyMapPreloaded() const; // Verify entire map is preloaded
 };

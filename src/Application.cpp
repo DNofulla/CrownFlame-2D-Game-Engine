@@ -152,23 +152,30 @@ void Application::update(float deltaTime) {
     return;
   }
 
-  if (inputManager->isRestartPressed() &&
-      gameWorld.getGameStateManager().isGameOver()) {
+  // Cache game state to avoid repeated calls
+  bool isGamePlaying = gameWorld.getGameStateManager().isPlaying();
+  bool isGameOver = gameWorld.getGameStateManager().isGameOver();
+
+  if (inputManager->isRestartPressed() && isGameOver) {
     gameWorld.initialize(windowWidth, windowHeight);
   }
 
-  // Update game world
+  // Update window size only if needed (cache previous values)
+  static int lastWindowWidth = 0, lastWindowHeight = 0;
   glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
-  gameWorld.updateScreenSize(windowWidth, windowHeight);
+  if (windowWidth != lastWindowWidth || windowHeight != lastWindowHeight) {
+    gameWorld.updateScreenSize(windowWidth, windowHeight);
+    lastWindowWidth = windowWidth;
+    lastWindowHeight = windowHeight;
+  }
 
   // Handle mouse input for pathfinding
-  if (inputManager->isRightMouseJustPressed() &&
-      gameWorld.getGameStateManager().isPlaying()) {
+  if (inputManager->isRightMouseJustPressed() && isGamePlaying) {
     gameWorld.handleMouseInput(inputManager->getMousePosition());
   }
 
   // Only allow player movement if game is playing and not following a path
-  if (gameWorld.getGameStateManager().isPlaying()) {
+  if (isGamePlaying) {
     glm::vec2 movement = inputManager->getMovementInput();
     // Only allow keyboard movement if not following a path
     if (glm::length(movement) > 0.1f) {
@@ -182,7 +189,7 @@ void Application::update(float deltaTime) {
   gameWorld.update(deltaTime);
 
   // Update pathfinding with actual player speed
-  if (gameWorld.getGameStateManager().isPlaying()) {
+  if (isGamePlaying) {
     gameWorld.updatePathfinding(deltaTime, playerSpeed);
   }
 }

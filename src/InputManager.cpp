@@ -1,10 +1,19 @@
 #include "InputManager.h"
+#include <stdexcept>
 
 InputManager::InputManager(GLFWwindow *window)
     : window(window), rightMousePressed(false), rightMouseJustPressed(false),
-      mousePosition(0.0f, 0.0f) {}
+      mousePosition(0.0f, 0.0f) {
+  if (!window) {
+    throw std::runtime_error(
+        "InputManager: Cannot initialize with null window pointer");
+  }
+}
 
 glm::vec2 InputManager::getMovementInput() const {
+  if (!window)
+    return glm::vec2(0.0f, 0.0f);
+
   glm::vec2 movement(0.0f, 0.0f);
 
   if (isKeyPressed(GLFW_KEY_W) || isKeyPressed(GLFW_KEY_UP))
@@ -20,16 +29,21 @@ glm::vec2 InputManager::getMovementInput() const {
 }
 
 bool InputManager::isExitPressed() const {
-  return isKeyPressed(GLFW_KEY_ESCAPE);
+  return window ? isKeyPressed(GLFW_KEY_ESCAPE) : false;
 }
 
-bool InputManager::isRestartPressed() const { return isKeyPressed(GLFW_KEY_R); }
+bool InputManager::isRestartPressed() const {
+  return window ? isKeyPressed(GLFW_KEY_R) : false;
+}
 
 bool InputManager::isKeyPressed(int key) const {
-  return glfwGetKey(window, key) == GLFW_PRESS;
+  return window ? (glfwGetKey(window, key) == GLFW_PRESS) : false;
 }
 
 void InputManager::update() {
+  if (!window)
+    return;
+
   // Update mouse position
   double xpos, ypos;
   glfwGetCursorPos(window, &xpos, &ypos);

@@ -1,7 +1,7 @@
 #include "AudioManager.h"
+#include <fstream>
 #include <iostream>
 #include <raudio.h>
-
 
 AudioManager::AudioManager() : m_initialized(false) {}
 
@@ -67,6 +67,15 @@ bool AudioManager::loadSound(const std::string &name,
     return true;
   }
 
+  // Check if file exists before attempting to load
+  std::ifstream file(filepath.c_str());
+  if (!file.good()) {
+    std::cerr << "AudioManager: File '" << filepath
+              << "' does not exist or is not accessible." << std::endl;
+    return false;
+  }
+  file.close();
+
   // Load the sound
   Sound loadedSound = LoadSound(filepath.c_str());
 
@@ -74,7 +83,9 @@ bool AudioManager::loadSound(const std::string &name,
   // check, but we can check if the sound has valid sample count)
   if (loadedSound.sampleCount == 0) {
     std::cerr << "AudioManager: Failed to load sound '" << name << "' from '"
-              << filepath << "'." << std::endl;
+              << filepath
+              << "'. File may be corrupted or in unsupported format."
+              << std::endl;
     return false;
   }
 

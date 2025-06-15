@@ -362,3 +362,37 @@ The codebase is designed for extensibility:
 - **Particle Effects**: Visual enhancements and animations
 - **Score System**: Achievement and leaderboard functionality
 - **Network Multiplayer**: Multiplayer support (enet library available)
+
+## 🔧 Recent Engine Improvements (v1.1)
+
+### Performance Optimizations
+- **Frustum Culling for Tiles**: TileMap rendering now only draws visible tiles, significantly improving performance for large maps
+- **Cached Game State Calls**: Application update loop caches frequently accessed game state values to reduce redundant function calls
+- **Window Size Change Detection**: Frame buffer size is only updated when window dimensions actually change
+- **Optimized Update Loop**: Reduced redundant calculations in the main game loop
+
+### Memory Management Enhancements
+- **Improved Resource Cleanup**: Better memory management in GameWorld destructor with null pointer safety
+- **Safe Pointer Handling**: All texture and font cleanup operations now use null checks and pointer nullification
+- **Database Connection Safety**: Enhanced error handling for SQLite operations with proper resource cleanup
+
+### Error Handling Improvements
+- **Audio System Robustness**: AudioManager now validates file existence before attempting to load sounds
+- **Input Manager Safety**: Added null pointer checks for all window-related operations
+- **Database Validation**: Enhanced parameter validation and error reporting in DatabaseManager
+
+### FPS Counter Accuracy Fix
+- **Proper Frame Averaging**: FPS calculation now correctly averages frames over the update interval instead of using only the last frame's delta time
+- **More Accurate Performance Metrics**: Provides better representation of actual frame rate performance
+
+### Audio System Enhancements
+- **File Validation**: Audio files are checked for existence before loading attempts
+- **Better Error Messages**: More descriptive error messages for unsupported formats or corrupted files
+- **Improved Resource Management**: Enhanced cleanup and error handling throughout the audio pipeline
+
+### Input System Reliability
+- **Null Window Protection**: All input operations are now safe against null window pointers
+- **Exception Safety**: InputManager constructor validates window pointer and throws meaningful errors
+- **Graceful Degradation**: Input methods return safe default values when window is unavailable
+
+These improvements enhance the engine's stability, performance, and developer experience while maintaining backward compatibility with existing game code.

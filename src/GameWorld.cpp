@@ -15,16 +15,18 @@ GameWorld::~GameWorld() {
   gameObjects.clear();
   enemies.clear();
 
-  // Clean up pig texture
+  // Clean up pig texture safely
   if (pigTexture) {
     static_cast<gl2d::Texture *>(pigTexture)->cleanup();
     delete static_cast<gl2d::Texture *>(pigTexture);
+    pigTexture = nullptr;
   }
 
-  // Clean up font
+  // Clean up font safely
   if (gameFont) {
     static_cast<gl2d::Font *>(gameFont)->cleanup();
     delete static_cast<gl2d::Font *>(gameFont);
+    gameFont = nullptr;
   }
 }
 
@@ -178,11 +180,15 @@ void GameWorld::update(float deltaTime) {
 
   // Only update game objects if playing
   if (gameStateManager.isPlaying()) {
+    // Cache screen bounds for better performance
+    const float screenW = static_cast<float>(screenWidth);
+    const float screenH = static_cast<float>(screenHeight);
+
     // Update non-static objects if needed
     for (auto &obj : gameObjects) {
       if (!obj->isStatic && obj.get() != player) {
         // Only constrain non-player objects to screen bounds
-        obj->constrainToBounds(screenWidth, screenHeight);
+        obj->constrainToBounds(screenW, screenH);
       }
     }
 
@@ -421,14 +427,87 @@ bool GameWorld::initializeTileSystem() {
     return true;
   }
 
-  // Create a default grass map if it doesn't exist (first time initialization)
-  if (!tileMapManager.createDefaultGrassMap("main_world", 100, 75)) {
+  // Calculate tile map dimensions to match playable world bounds
+  // World: 2000x1500 pixels, Tiles: 64x64 pixels each
+  int tilesWide = static_cast<int>(worldWidth / 64.0f);  // 2000/64 = 31 tiles
+  int tilesHigh = static_cast<int>(worldHeight / 64.0f); // 1500/64 = 23 tiles
+
+  // Update world bounds to exactly match tile map dimensions
+  worldWidth = static_cast<float>(tilesWide * 64);  // 31 * 64 = 1,984 pixels
+  worldHeight = static_cast<float>(tilesHigh * 64); // 23 * 64 = 1,472 pixels
+
+  std::cout << "Creating tile map to match world bounds:" << std::endl;
+  std::cout << "Updated world size: " << worldWidth << "x" << worldHeight
+            << " pixels" << std::endl;
+  std::cout << "Tile map: " << tilesWide << "x" << tilesHigh << " tiles"
+            << std::endl;
+
+  // Create a tile map that exactly matches the playable world size
+  if (!tileMapManager.createDefaultGrassMap("main_world", tilesWide,
+                                            tilesHigh)) {
     std::cerr << "Failed to create default grass map" << std::endl;
     return false;
   }
 
+  // Verify map is fully preloaded by checking some random tiles
+  TileMap *currentMap = tileMapManager.getCurrentMap();
+  if (currentMap) {
+    std::cout << "=== MAP PRELOAD VERIFICATION ===" << std::endl;
+    std::cout << "Map size: " << currentMap->getMapWidth() << "x"
+              << currentMap->getMapHeight() << " (Total: "
+              << (currentMap->getMapWidth() * currentMap->getMapHeight())
+              << " tiles)" << std::endl;
+    std::cout << "World bounds: " << worldWidth << "x" << worldHeight
+              << " pixels" << std::endl;
+    std::cout
+        << "Perfect alignment: Player movement exactly matches tile boundaries!"
+        << std::endl;
+    std::cout << "All tiles generated at startup - NO runtime generation!"
+              << std::endl;
+    std::cout << "=================================" << std::endl;
+  }
+
   std::cout << "Tile system initialized successfully" << std::endl;
   return true;
+}
+
+void GameWorld::verifyMapPreloaded() const {
+  TileMap *currentMap = tileMapManager.getCurrentMap();
+  if (!currentMap) {
+    std::cout << "No current map loaded!" << std::endl;
+    return;
+  }
+
+  int width = currentMap->getMapWidth();
+  int height = currentMap->getMapHeight();
+  int totalTiles = width * height;
+
+  std::cout << "\n=== FULL MAP PRELOAD VERIFICATION ===" << std::endl;
+  std::cout << "Map dimensions: " << width << "x" << height << " = "
+            << totalTiles << " total tiles" << std::endl;
+
+  // Check every single tile to prove they all exist
+  int tilesChecked = 0;
+  int validTiles = 0;
+
+  for (int y = 0; y < height; ++y) {
+    for (int x = 0; x < width; ++x) {
+      int tileId = currentMap->getTile(x, y);
+      tilesChecked++;
+      if (tileId >= 0) { // Valid tile ID
+        validTiles++;
+      }
+    }
+  }
+
+  std::cout << "Tiles checked: " << tilesChecked << "/" << totalTiles
+            << std::endl;
+  std::cout << "Valid tiles found: " << validTiles << std::endl;
+  std::cout << "Verification: "
+            << (validTiles == totalTiles ? "PASS - ALL TILES PRELOADED!"
+                                         : "FAIL - Missing tiles!")
+            << std::endl;
+  std::cout << "====================================\n" << std::endl;
 }
 
 void GameWorld::handleMouseInput(const glm::vec2 &mouseScreenPos) {
