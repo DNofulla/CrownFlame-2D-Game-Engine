@@ -90,6 +90,18 @@ Vertex & Fragment Shaders, Memory Management, Parallelization with CUDA and much
 - **Multiple Map Support**: Manage and switch between different tile maps
 - **Extensible Design**: Easy to add new tilesets and tile types
 
+### Scene/Level Management System
+- **Scene-Based Architecture**: Complete level management with scenes containing all game objects
+- **File-Based Scene Definition**: Load scenes from external `.scene` files for easy level creation
+- **Programmatic Scene Creation**: Create scenes dynamically through code using SceneData structures
+- **Scene Transitions**: Smooth transitions between levels with multiple effect types (fade, slide)
+- **Auto-Progression**: Automatic scene transitions based on completion conditions
+- **Scene Completion Triggers**: Flexible completion conditions (collect all items, defeat enemies, manual)
+- **Persistent Scene Storage**: Save and load scenes to/from files for level editors
+- **Hot-Swapping**: Change scenes without restarting the application
+- **Scene Callbacks**: Event system for scene changes and transitions
+- **Validation System**: Built-in validation for scene definitions and data integrity
+
 ### Database System
 - **SQLite Integration**: Persistent data storage using SQLite database
 - **Automatic Database Creation**: Database and directory created automatically if they don't exist
@@ -247,6 +259,9 @@ cmake --build . --config Release
 │   ├── InputManager.h      # Input handling
 │   ├── openglErrorReporting.h # OpenGL debugging
 │   ├── Pathfinder.h        # A* pathfinding algorithm
+│   ├── Scene.h             # Individual scene/level management
+│   ├── SceneData.h         # Scene data structures and definitions
+│   ├── SceneManager.h      # Scene loading, transitions, and management
 │   ├── Tile.h              # Individual tile representation
 │   ├── TileMap.h           # 2D tile grid management
 │   ├── TileMapManager.h    # Tileset and map management
@@ -265,6 +280,9 @@ cmake --build . --config Release
 │   ├── main.cpp            # Application entry point
 │   ├── openglErrorReporting.cpp # OpenGL error handling
 │   ├── Pathfinder.cpp      # A* pathfinding implementation
+│   ├── Scene.cpp           # Scene management implementation
+│   ├── SceneExample.cpp    # Example usage of the scene system
+│   ├── SceneManager.cpp    # Scene manager implementation
 │   ├── Tile.cpp            # Tile implementation
 │   ├── TileMap.cpp         # Tile map implementation
 │   ├── TileMapManager.cpp  # Tile system management
@@ -272,7 +290,8 @@ cmake --build . --config Release
 │   └── UIManager.cpp       # UI implementation
 ├── 📂 database/            # Database storage (created automatically)
 ├── 📂 resources/           # Game assets
-│   └── 📂 tiles/          # Individual tile assets (64x64 PNG files)
+│   ├── 📂 tiles/          # Individual tile assets (64x64 PNG files)
+│   └── 📂 scenes/         # Scene definition files (.scene format)
 ├── 📂 thirdparty/         # External libraries (not documented here)
 ├── CMakeLists.txt         # Build configuration
 ├── build_and_run.ps1      # PowerShell build script
@@ -312,6 +331,108 @@ if (dbManager.isConnected()) {
     // Database operations here
 }
 dbManager.close();
+```
+
+## 🎬 Scene Management System
+
+### Scene System Features
+The Scene Management System provides a complete solution for creating, managing, and transitioning between game levels:
+
+- **Hierarchical Scene Structure**: Each scene contains all game objects, settings, and metadata
+- **File-Based Level Creation**: Create levels using simple text-based `.scene` files
+- **Programmatic Scene Creation**: Build scenes dynamically through code
+- **Transition Effects**: Fade, slide, and instant transitions between scenes
+- **Auto-Progression**: Scenes can automatically advance based on completion conditions
+- **Scene Persistence**: Save and load scenes for level editors and procedural generation
+
+### Scene File Format
+Scene files use a simple INI-style format:
+
+```ini
+[SCENE]
+name=Level 1 - Tutorial
+description=A simple tutorial level
+nextScene=level2
+transitionTrigger=collectibles_complete
+
+[WORLD]
+width=2000.0
+height=1500.0
+backgroundMusic=background.mp3
+
+[CAMERA]
+followSpeed=5.0
+followEnabled=true
+
+[PLAYER]
+spawnX=100.0
+spawnY=100.0
+
+[OBSTACLES]
+300.0,200.0,80.0,80.0
+500.0,300.0,60.0,120.0
+
+[COLLECTIBLES]
+450.0,150.0
+150.0,250.0
+
+[ENEMIES]
+400.0,300.0,0,100.0  # x,y,pattern,speed
+```
+
+### Scene Manager API
+```cpp
+// Initialize scene manager
+Application app;
+SceneManager& sceneManager = app.getSceneManager();
+
+// Load scenes from files
+app.loadScene("level1", "resources/scenes/level1.scene");
+app.loadScene("level2", "resources/scenes/level2.scene");
+
+// Create scenes programmatically
+SceneData::SceneDefinition customScene("Custom Level");
+customScene.obstacles.emplace_back(100, 100, 50, 50);
+customScene.collectibles.emplace_back(200, 200);
+app.loadSceneFromDefinition("custom", customScene);
+
+// Change scenes with transitions
+SceneData::SceneTransition fadeTransition(
+    SceneData::TransitionType::FADE_TO_BLACK, 2.0f);
+sceneManager.changeScene("level2", fadeTransition);
+
+// Instant scene change
+sceneManager.changeSceneInstant("level1");
+
+// Scene callbacks
+sceneManager.setOnSceneChangedCallback([](const std::string& sceneName) {
+    std::cout << "Changed to scene: " << sceneName << std::endl;
+});
+```
+
+### Movement Patterns for Enemies
+- **0 (HORIZONTAL)**: Move left and right
+- **1 (VERTICAL)**: Move up and down
+- **2 (CIRCULAR)**: Move in a circle around a center point
+- **3 (PATROL)**: Move between two waypoints
+
+### Scene Completion Triggers
+- **collectibles_complete**: Scene completes when all collectibles are gathered
+- **enemies_defeat**: Scene completes when all enemies are eliminated
+- **manual**: Scene completion is controlled manually through code
+
+### Example Scene Usage
+```cpp
+// In your main application setup
+void setupGameScenes(Application& app) {
+    // Load levels from files
+    app.loadScene("tutorial", "resources/scenes/tutorial.scene");
+    app.loadScene("level1", "resources/scenes/level1.scene");
+    app.loadScene("boss", "resources/scenes/boss_fight.scene");
+    
+    // Start with tutorial
+    app.changeScene("tutorial");
+}
 ```
 
 ## 🔊 Audio System

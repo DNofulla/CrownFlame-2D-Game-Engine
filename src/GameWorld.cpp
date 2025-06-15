@@ -109,6 +109,50 @@ void GameWorld::initialize(int width, int height) {
   followingPath = false;
 }
 
+void GameWorld::initializeEmpty(int width, int height) {
+  screenWidth = width;
+  screenHeight = height;
+
+  // Clear existing objects
+  gameObjects.clear();
+  enemies.clear();
+  player = nullptr;
+
+  // Initialize tile system
+  initializeTileSystem();
+
+  // Load pig texture if not already loaded
+  if (!pigTexture) {
+    pigTexture = new gl2d::Texture();
+    static_cast<gl2d::Texture *>(pigTexture)
+        ->loadFromFile(RESOURCES_PATH "pig.png");
+  }
+
+  // Load font if not already loaded
+  if (!gameFont) {
+    gameFont = new gl2d::Font();
+    // Try to load a system font, fallback to a simple approach if not available
+    try {
+      static_cast<gl2d::Font *>(gameFont)->createFromFile(
+          "C:/Windows/Fonts/arial.ttf");
+    } catch (...) {
+      // If no system font available, we'll render text differently
+      delete static_cast<gl2d::Font *>(gameFont);
+      gameFont = nullptr;
+    }
+  }
+
+  // Reset game state
+  gameStateManager.resetGame();
+
+  // Initialize pathfinding
+  currentPath.clear();
+  currentPathIndex = 0;
+  followingPath = false;
+
+  // DO NOT create any game objects - the Scene system will handle that
+}
+
 void GameWorld::addObject(std::unique_ptr<GameObject> object) {
   gameObjects.push_back(std::move(object));
 }
@@ -119,6 +163,10 @@ GameObject *GameWorld::createPlayer(float x, float y) {
       false);
   GameObject *playerPtr = playerObj.get();
   addObject(std::move(playerObj));
+
+  // Set the internal player reference so updatePlayer works
+  player = playerPtr;
+
   return playerPtr;
 }
 

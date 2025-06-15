@@ -53,6 +53,10 @@ public:
   // Initialize the game world
   void initialize(int width, int height);
 
+  // Initialize only basic systems without creating default objects (for Scene
+  // system)
+  void initializeEmpty(int width, int height);
+
   // Add objects to the world
   void addObject(std::unique_ptr<GameObject> object);
   GameObject *createPlayer(float x, float y);

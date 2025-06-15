@@ -1,0 +1,48 @@
+[SCENE]
+name=Level 2 - The Maze
+description=A more challenging level with complex obstacles and varied enemy patterns
+nextScene=level3
+transitionTrigger=collectibles_complete
+
+[WORLD]
+width=2500.0
+height=2000.0
+backgroundMusic=
+
+[CAMERA]
+followSpeed=6.0
+followEnabled=true
+
+[PLAYER]
+spawnX=50.0
+spawnY=50.0
+
+[OBSTACLES]
+# Maze-like structure
+100.0,100.0,300.0,50.0
+100.0,100.0,50.0,200.0
+350.0,100.0,50.0,300.0
+100.0,250.0,200.0,50.0
+500.0,150.0,100.0,50.0
+500.0,200.0,50.0,150.0
+650.0,100.0,150.0,50.0
+750.0,100.0,50.0,200.0
+900.0,150.0,100.0,100.0
+
+[COLLECTIBLES]
+200.0,175.0
+275.0,175.0
+425.0,125.0
+525.0,175.0
+725.0,125.0
+600.0,400.0
+800.0,350.0
+950.0,200.0
+
+[ENEMIES]
+# Mix of movement patterns
+250.0,175.0,0,60.0
+525.0,275.0,1,70.0
+700.0,200.0,2,90.0
+600.0,300.0,3,80.0
+850.0,250.0,0,100.0 

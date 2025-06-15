@@ -1,0 +1,33 @@
+[SCENE]
+name=Level 1 - Tutorial
+description=A simple tutorial level with basic obstacles and collectibles
+nextScene=level2
+transitionTrigger=collectibles_complete
+
+[WORLD]
+width=2000.0
+height=1500.0
+backgroundMusic=
+
+[CAMERA]
+followSpeed=5.0
+followEnabled=true
+
+[PLAYER]
+spawnX=100.0
+spawnY=100.0
+
+[OBSTACLES]
+300.0,200.0,80.0,80.0
+500.0,300.0,60.0,120.0
+200.0,350.0,100.0,50.0
+800.0,150.0,70.0,90.0
+
+[COLLECTIBLES]
+450.0,150.0
+150.0,250.0
+400.0,400.0
+
+[ENEMIES]
+400.0,300.0,0,100.0
+700.0,450.0,1,80.0 

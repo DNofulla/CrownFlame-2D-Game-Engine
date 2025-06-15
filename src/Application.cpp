@@ -51,6 +51,9 @@ void Application::run() {
 }
 
 void Application::shutdown() {
+  // Shutdown scene manager
+  sceneManager.shutdown();
+
   // Shutdown audio system
   audioManager.shutdown();
 
@@ -129,12 +132,28 @@ bool Application::initializeGame() {
   if (!uiManager.initialize(window))
     return false;
 
-  // Initialize game world
+  // Initialize scene manager
   glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
-  gameWorld.initialize(windowWidth, windowHeight);
+  if (!sceneManager.initialize(windowWidth, windowHeight)) {
+    std::cerr << "Failed to initialize scene manager!" << std::endl;
+    return false;
+  }
 
-  // Pass audio manager reference to game world
-  gameWorld.setAudioManager(&audioManager);
+  // Pass audio manager reference to scene manager
+  sceneManager.setAudioManager(&audioManager);
+
+  // Load default scene
+  auto defaultScene = SceneManager::createDefaultScene("default");
+  if (!sceneManager.loadSceneFromDefinition("default", defaultScene)) {
+    std::cerr << "Failed to load default scene!" << std::endl;
+    return false;
+  }
+
+  // Change to default scene
+  if (!sceneManager.changeSceneInstant("default")) {
+    std::cerr << "Failed to activate default scene!" << std::endl;
+    return false;
+  }
 
   return true;
 }
@@ -152,45 +171,55 @@ void Application::update(float deltaTime) {
     return;
   }
 
-  // Cache game state to avoid repeated calls
-  bool isGamePlaying = gameWorld.getGameStateManager().isPlaying();
-  bool isGameOver = gameWorld.getGameStateManager().isGameOver();
+  // Update scene manager first
+  sceneManager.update(deltaTime);
 
-  if (inputManager->isRestartPressed() && isGameOver) {
-    gameWorld.initialize(windowWidth, windowHeight);
-  }
+  // Get current scene for input handling
+  Scene *currentScene = sceneManager.getCurrentScene();
+  GameWorld *currentGameWorld =
+      currentScene ? currentScene->getGameWorld() : nullptr;
 
-  // Update window size only if needed (cache previous values)
-  static int lastWindowWidth = 0, lastWindowHeight = 0;
-  glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
-  if (windowWidth != lastWindowWidth || windowHeight != lastWindowHeight) {
-    gameWorld.updateScreenSize(windowWidth, windowHeight);
-    lastWindowWidth = windowWidth;
-    lastWindowHeight = windowHeight;
-  }
+  if (currentGameWorld) {
+    // Cache game state to avoid repeated calls
+    bool isGamePlaying = currentGameWorld->getGameStateManager().isPlaying();
+    bool isGameOver = currentGameWorld->getGameStateManager().isGameOver();
 
-  // Handle mouse input for pathfinding
-  if (inputManager->isRightMouseJustPressed() && isGamePlaying) {
-    gameWorld.handleMouseInput(inputManager->getMousePosition());
-  }
-
-  // Only allow player movement if game is playing and not following a path
-  if (isGamePlaying) {
-    glm::vec2 movement = inputManager->getMovementInput();
-    // Only allow keyboard movement if not following a path
-    if (glm::length(movement) > 0.1f) {
-      // Cancel pathfinding if player uses keyboard
-      gameWorld.stopPathfinding();
-      gameWorld.updatePlayer(movement.x, movement.y, playerSpeed, deltaTime);
+    if (inputManager->isRestartPressed() && isGameOver) {
+      sceneManager.restartCurrentScene();
     }
-  }
 
-  gameWorld.updateCamera(deltaTime);
-  gameWorld.update(deltaTime);
+    // Update window size only if needed (cache previous values)
+    static int lastWindowWidth = 0, lastWindowHeight = 0;
+    glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
+    if (windowWidth != lastWindowWidth || windowHeight != lastWindowHeight) {
+      sceneManager.updateScreenSize(windowWidth, windowHeight);
+      lastWindowWidth = windowWidth;
+      lastWindowHeight = windowHeight;
+    }
 
-  // Update pathfinding with actual player speed
-  if (isGamePlaying) {
-    gameWorld.updatePathfinding(deltaTime, playerSpeed);
+    // Handle mouse input for pathfinding
+    if (inputManager->isRightMouseJustPressed() && isGamePlaying) {
+      currentGameWorld->handleMouseInput(inputManager->getMousePosition());
+    }
+
+    // Only allow player movement if game is playing and not following a path
+    if (isGamePlaying) {
+      glm::vec2 movement = inputManager->getMovementInput();
+      // Only allow keyboard movement if not following a path
+      if (glm::length(movement) > 0.1f) {
+        // Cancel pathfinding if player uses keyboard
+        currentGameWorld->stopPathfinding();
+        currentGameWorld->updatePlayer(movement.x, movement.y, playerSpeed,
+                                       deltaTime);
+      }
+    }
+
+    currentGameWorld->updateCamera(deltaTime);
+
+    // Update pathfinding with actual player speed
+    if (isGamePlaying) {
+      currentGameWorld->updatePathfinding(deltaTime, playerSpeed);
+    }
   }
 }
 
@@ -204,16 +233,32 @@ void Application::render() {
   // Set up camera for following player
   renderer.updateWindowMetrics(windowWidth, windowHeight);
   gl2d::Camera camera;
-  glm::vec2 cameraPos = gameWorld.getCameraPosition();
-  camera.position = cameraPos;
-  renderer.setCamera(camera);
 
-  // Render game world
-  gameWorld.render(&renderer);
-  renderer.flush();
+  // Get current scene for rendering
+  Scene *currentScene = sceneManager.getCurrentScene();
+  GameWorld *currentGameWorld =
+      currentScene ? currentScene->getGameWorld() : nullptr;
 
-  // Render UI
-  uiManager.renderGameUI(gameWorld, fpsCounter, playerSpeed);
+  if (currentGameWorld) {
+    glm::vec2 cameraPos = currentGameWorld->getCameraPosition();
+    camera.position = cameraPos;
+    renderer.setCamera(camera);
+
+    // Render current scene
+    sceneManager.render(&renderer);
+    renderer.flush();
+
+    // Render UI using current game world
+    uiManager.renderGameUI(*currentGameWorld, fpsCounter, playerSpeed);
+  } else {
+    // Fallback: render default camera
+    camera.position = glm::vec2(0, 0);
+    renderer.setCamera(camera);
+    renderer.flush();
+
+    // Render UI with legacy game world as fallback
+    uiManager.renderGameUI(gameWorld, fpsCounter, playerSpeed);
+  }
 
   // End UI frame
   uiManager.endFrame();
@@ -227,3 +272,21 @@ void Application::handleEvents() {
 void Application::errorCallback(int error, const char *description) {
   std::cout << "GLFW Error (" << error << "): " << description << std::endl;
 }
+
+// Scene management methods
+bool Application::loadScene(const std::string &sceneName,
+                            const std::string &filePath) {
+  return sceneManager.loadSceneFromFile(sceneName, filePath);
+}
+
+bool Application::loadSceneFromDefinition(
+    const std::string &sceneName,
+    const SceneData::SceneDefinition &definition) {
+  return sceneManager.loadSceneFromDefinition(sceneName, definition);
+}
+
+bool Application::changeScene(const std::string &sceneName) {
+  return sceneManager.changeScene(sceneName);
+}
+
+void Application::restartCurrentScene() { sceneManager.restartCurrentScene(); }
