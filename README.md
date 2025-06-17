@@ -698,3 +698,8 @@ The codebase is designed for extensibility:
 - **Particle Effects**: Visual enhancements and animations
 - **Score System**: Achievement and leaderboard functionality
 - **Network Multiplayer**: Multiplayer support (enet library available)
+
+
+## 📄 License
+
+This project is licensed under the MIT License.
