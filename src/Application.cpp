@@ -56,6 +56,9 @@ void Application::shutdown() {
     settings.saveCurrentWindowState(window);
   }
 
+  // Shutdown hot reload manager
+  hotReloadManager.shutdown();
+
   // Shutdown scene manager
   sceneManager.shutdown();
 
@@ -140,6 +143,14 @@ bool Application::initializeGame() {
                            RESOURCES_PATH "audio/collectible_pickup.mp3");
   }
 
+  // Initialize hot reload manager
+  if (!hotReloadManager.initialize(this, &sceneManager, &audioManager)) {
+    std::cerr << "Failed to initialize hot reload system!" << std::endl;
+    // Hot reload failure is not critical, continue without hot reloading
+  } else {
+    std::cout << "Hot reload system initialized successfully" << std::endl;
+  }
+
   // Initialize UI manager
   if (!uiManager.initialize(window))
     return false;
@@ -168,6 +179,18 @@ bool Application::initializeGame() {
                                  RESOURCES_PATH "scenes/level2.scene");
   sceneManager.loadSceneFromFile("sandbox",
                                  RESOURCES_PATH "scenes/sandbox.scene");
+
+  // Register scenes for hot reloading
+  hotReloadManager.registerScene("level1",
+                                 RESOURCES_PATH "scenes/level1.scene");
+  hotReloadManager.registerScene("level2",
+                                 RESOURCES_PATH "scenes/level2.scene");
+  hotReloadManager.registerScene("sandbox",
+                                 RESOURCES_PATH "scenes/sandbox.scene");
+
+  // Register audio for hot reloading
+  hotReloadManager.registerAudio("collectible_pickup",
+                                 RESOURCES_PATH "audio/collectible_pickup.mp3");
 
   // Create a custom scene programmatically
   auto customScene = SceneManager::createDefaultScene("custom");
@@ -281,9 +304,9 @@ void Application::render() {
     sceneManager.render(&renderer);
     renderer.flush();
 
-    // Render UI using current game world and scene manager
+    // Render UI using current game world, scene manager, and hot reload manager
     uiManager.renderGameUI(*currentGameWorld, fpsCounter, playerSpeed,
-                           sceneManager);
+                           sceneManager, hotReloadManager);
   } else {
     // Fallback: render default camera
     camera.position = glm::vec2(0, 0);

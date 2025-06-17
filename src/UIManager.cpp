@@ -1,5 +1,6 @@
 #include "UIManager.h"
 #include "FileBrowser.h"
+#include "HotReloadManager.h"
 #include "Scene.h"
 #include "SceneManager.h"
 #include "SceneTemplates.h"
@@ -787,3 +788,151 @@ void UIManager::validateCurrentScene(SceneManager &sceneManager) {
 }
 
 void UIManager::refreshSceneList() { needsSceneListRefresh = true; }
+
+// New overload with hot reload manager
+void UIManager::renderGameUI(GameWorld &gameWorld, const FPSCounter &fpsCounter,
+                             float &playerSpeed, SceneManager &sceneManager,
+                             HotReloadManager &hotReloadManager) {
+#if REMOVE_IMGUI == 0
+  ImGui::Begin("Game Controls");
+
+  // Display FPS
+  ImGui::Text("FPS: %.1f", fpsCounter.getFPS());
+  ImGui::Separator();
+
+  // Hot Reload Controls
+  renderHotReloadControls(hotReloadManager);
+  ImGui::Separator();
+
+  // Scene selector and new features
+  renderSceneSelector(sceneManager);
+  renderSceneInformation(sceneManager);
+  ImGui::Separator();
+
+  // Scene management buttons
+  if (ImGui::Button("📁 File Browser")) {
+    showFileBrowser = true;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("📋 Templates")) {
+    showTemplateCreator = true;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("ℹ️ Scene Info")) {
+    showSceneInfo = true;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("✅ Validate")) {
+    validateCurrentScene(sceneManager);
+  }
+
+  // Render feature windows
+  if (showFileBrowser) {
+    renderFileBrowser(sceneManager);
+  }
+  if (showTemplateCreator) {
+    renderTemplateCreator(sceneManager);
+  }
+  if (showValidationResults) {
+    renderValidationResults();
+  }
+
+  ImGui::Separator();
+
+  // Player and camera info
+  GameObject *player = gameWorld.getPlayer();
+  if (player) {
+    glm::vec2 cameraPos = gameWorld.getCameraPosition();
+    renderPlayerInfo(player, cameraPos);
+  }
+
+  // Controls
+  renderControls();
+
+  // Game settings
+  ImGui::SliderFloat("Movement Speed", &playerSpeed, 50.0f, 500.0f);
+
+  static float cameraSpeed = 5.0f;
+  if (ImGui::SliderFloat("Camera Follow Speed", &cameraSpeed, 1.0f, 20.0f)) {
+    gameWorld.setCameraFollowSpeed(cameraSpeed);
+  }
+
+  static bool cameraFollow = true;
+  if (ImGui::Checkbox("Camera Follow Player", &cameraFollow)) {
+    gameWorld.enableCameraFollow(cameraFollow);
+  }
+
+  if (ImGui::Button("Reset Game World")) {
+    int width, height;
+    glfwGetFramebufferSize(glfwGetCurrentContext(), &width, &height);
+    gameWorld.initialize(width, height);
+  }
+
+  // World info
+  renderWorldInfo(gameWorld);
+
+  // Game state
+  renderGameState(gameWorld);
+
+  ImGui::End();
+#endif
+}
+
+void UIManager::renderHotReloadControls(HotReloadManager &hotReloadManager) {
+#if REMOVE_IMGUI == 0
+  if (ImGui::CollapsingHeader("🔥 Hot Reload",
+                              ImGuiTreeNodeFlags_DefaultOpen)) {
+    bool isEnabled = hotReloadManager.getEnabled();
+    if (ImGui::Checkbox("Enable Hot Reloading", &isEnabled)) {
+      if (isEnabled) {
+        hotReloadManager.enable();
+      } else {
+        hotReloadManager.disable();
+      }
+    }
+
+    if (isEnabled) {
+      ImGui::Text("Watched Files: %zu", hotReloadManager.getWatchedFileCount());
+
+      if (ImGui::Button("🔄 Reload All Assets")) {
+        hotReloadManager.reloadAllAssets();
+      }
+
+      ImGui::SameLine();
+      if (ImGui::Button("📊 Show Status")) {
+        hotReloadManager.printStatus();
+      }
+
+      // Show watched files in a scrollable list
+      if (ImGui::TreeNode("Watched Files")) {
+        auto watchedFiles = hotReloadManager.getWatchedFiles();
+        if (watchedFiles.empty()) {
+          ImGui::Text("No files being watched");
+        } else {
+          ImGui::BeginChild("WatchedFilesList", ImVec2(0, 100), true);
+          for (const auto &file : watchedFiles) {
+            // Extract just the filename for display
+            size_t lastSlash = file.find_last_of("/\\");
+            std::string filename = (lastSlash != std::string::npos)
+                                       ? file.substr(lastSlash + 1)
+                                       : file;
+
+            ImGui::Text("📄 %s", filename.c_str());
+            if (ImGui::IsItemHovered()) {
+              ImGui::SetTooltip("Full path: %s", file.c_str());
+            }
+          }
+          ImGui::EndChild();
+        }
+        ImGui::TreePop();
+      }
+
+      ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f),
+                         "Note: Files are monitored for changes every 500ms");
+    } else {
+      ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f),
+                         "Hot reloading is disabled");
+    }
+  }
+#endif
+}

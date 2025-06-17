@@ -2,6 +2,7 @@
 #include "AudioManager.h"
 #include "FPSCounter.h"
 #include "GameWorld.h"
+#include "HotReloadManager.h"
 #include "InputManager.h"
 #include "SceneManager.h"
 #include "Settings.h"
@@ -24,7 +25,8 @@ private:
   InputManager *inputManager;
   UIManager uiManager;
   AudioManager audioManager;
-  Settings settings; // Settings management system
+  HotReloadManager hotReloadManager; // Hot reloading system
+  Settings settings;                 // Settings management system
 
   // Game settings
   float playerSpeed;
@@ -53,6 +55,9 @@ public:
 
   // Settings access
   Settings &getSettings() { return settings; }
+
+  // Hot reload access
+  HotReloadManager &getHotReloadManager() { return hotReloadManager; }
 
 private:
   // Initialization helpers

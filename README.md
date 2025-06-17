@@ -102,6 +102,18 @@ Vertex & Fragment Shaders, Memory Management, Parallelization with CUDA and much
 - **Scene Callbacks**: Event system for scene changes and transitions
 - **Validation System**: Built-in validation for scene definitions and data integrity
 
+### 🔥 Hot Reloading System
+- **Asset Hot Reloading**: Automatically reload assets when files change on disk for faster iteration
+- **Real-Time File Monitoring**: Background file watcher monitors assets every 500ms for changes
+- **Multi-Asset Support**: Automatic detection and reloading of textures, scenes, and audio files
+- **Scene Hot Reloading**: Instantly reload and restart scene files when modified externally
+- **Audio Hot Reloading**: Update sound effects without restarting the engine
+- **Smart Scene Detection**: Automatically reloads the current active scene if it's modified
+- **Developer-Friendly UI**: In-game controls to enable/disable hot reloading and view watched files
+- **Non-Intrusive Design**: Hot reload failures are logged but don't crash the application
+- **File Type Auto-Detection**: Automatically determines asset type based on file extension
+- **Registry System**: Tracks which assets are loaded and their file paths for efficient reloading
+
 ### Database System
 - **SQLite Integration**: Persistent data storage using SQLite database
 - **Automatic Database Creation**: Database and directory created automatically if they don't exist
@@ -149,6 +161,33 @@ Vertex & Fragment Shaders, Memory Management, Parallelization with CUDA and much
 ### UI Controls
 - **Mouse**: Interact with UI sliders and buttons
 - **Docking**: Drag UI panels to rearrange interface
+
+### Hot Reload Controls
+- **Hot Reload Panel**: Located in the Game Controls window under "🔥 Hot Reload" section
+- **Enable Toggle**: Check/uncheck "Enable Hot Reloading" to activate the file monitoring system
+- **Reload All Button**: Click "🔄 Reload All Assets" to manually trigger a full asset reload
+- **Status Button**: Click "📊 Show Status" to print detailed file watching information to the console
+- **Watched Files List**: Expand "Watched Files" to see all monitored assets and their paths
+
+## 🔄 Hot Reloading Developer Workflow
+
+### Quick Start
+1. **Launch the Game**: Start the application normally
+2. **Enable Hot Reloading**: In the Game Controls window, check "Enable Hot Reloading"
+3. **Modify Assets**: Edit any scene (`.scene`), audio (`.mp3`, `.wav`, `.ogg`), or texture files
+4. **See Changes**: The engine automatically detects file changes and reloads them within ~500ms
+
+### Supported Asset Types
+- **Scene Files**: `.scene` files will be automatically reloaded and the current scene restarted if it's the one being modified
+- **Audio Files**: `.mp3`, `.wav`, `.ogg` files will be reloaded and ready for immediate playback
+- **Texture Files**: `.png`, `.jpg`, `.jpeg`, `.bmp`, `.tga` files (framework ready, implementation varies by texture usage)
+
+### Development Tips
+- **Scene Editing**: Edit scene files in any text editor, save, and watch the changes appear instantly
+- **Audio Testing**: Replace audio files with different versions to test sound effects quickly
+- **Non-Disruptive**: If a file has errors, the reload will fail gracefully without crashing the game
+- **Performance**: File monitoring runs in a background thread and checks every 500ms
+- **Console Output**: Watch the console for detailed information about what's being reloaded
 
 ## 🏗️ Technical Features
 
