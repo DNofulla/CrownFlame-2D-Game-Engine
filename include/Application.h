@@ -1,4 +1,5 @@
 #pragma once
+#include "AssetManager.h"
 #include "AudioManager.h"
 #include "FPSCounter.h"
 #include "GameWorld.h"
@@ -24,6 +25,7 @@ private:
   FPSCounter fpsCounter;
   InputManager *inputManager;
   UIManager uiManager;
+  AssetManager assetManager; // Asset management system
   AudioManager audioManager;
   HotReloadManager hotReloadManager; // Hot reloading system
   Settings settings;                 // Settings management system
@@ -55,6 +57,9 @@ public:
 
   // Settings access
   Settings &getSettings() { return settings; }
+
+  // Asset Manager access
+  AssetManager &getAssetManager() { return assetManager; }
 
   // Hot reload access
   HotReloadManager &getHotReloadManager() { return hotReloadManager; }

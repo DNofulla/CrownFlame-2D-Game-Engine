@@ -62,6 +62,9 @@ void Application::shutdown() {
   // Shutdown scene manager
   sceneManager.shutdown();
 
+  // Shutdown asset manager
+  assetManager.shutdown();
+
   // Shutdown audio system
   audioManager.shutdown();
 
@@ -132,6 +135,15 @@ bool Application::initializeOpenGL() {
 bool Application::initializeGame() {
   // Initialize input manager
   inputManager = new InputManager(window);
+
+  // Initialize asset manager
+  if (!assetManager.initialize()) {
+    std::cerr << "Failed to initialize asset management system!" << std::endl;
+    return false;
+  } else {
+    std::cout << "Asset management system initialized successfully"
+              << std::endl;
+  }
 
   // Initialize audio manager
   if (!audioManager.initialize()) {

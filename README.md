@@ -114,6 +114,23 @@ Vertex & Fragment Shaders, Memory Management, Parallelization with CUDA and much
 - **File Type Auto-Detection**: Automatically determines asset type based on file extension
 - **Registry System**: Tracks which assets are loaded and their file paths for efficient reloading
 
+### 📦 Asset Management System
+- **Centralized Asset Loading**: Unified system for managing all game assets (textures, audio, scenes, fonts)
+- **Smart Memory Management**: Automatic loading, caching, and cleanup of assets
+- **Multi-Format Support**: 
+  - **Textures**: PNG, JPG, JPEG, BMP, TGA with pixelated and mipmapping options
+  - **Audio**: MP3, WAV, OGG, FLAC integration with raudio
+  - **Scenes**: .scene file format for level data
+  - **Fonts**: TTF, OTF font loading with gl2d integration
+- **Batch Operations**: Load entire directories of assets with filtering by type
+- **Auto-Discovery**: Automatically scan and catalog assets in the resources/ folder
+- **Asset Validation**: Verify asset integrity and detect missing files
+- **Hot Reload Integration**: Seamless asset reloading during development
+- **Memory Tracking**: Monitor asset usage and memory consumption
+- **Asset Registry**: Complete catalog of available and loaded assets with metadata
+- **Callback System**: Event notifications for asset loading success/failure
+- **Priority Loading**: Asset priority system for optimized loading order
+
 ### Database System
 - **SQLite Integration**: Persistent data storage using SQLite database
 - **Automatic Database Creation**: Database and directory created automatically if they don't exist
@@ -169,6 +186,75 @@ Vertex & Fragment Shaders, Memory Management, Parallelization with CUDA and much
 - **Status Button**: Click "📊 Show Status" to print detailed file watching information to the console
 - **Watched Files List**: Expand "Watched Files" to see all monitored assets and their paths
 
+## 📦 Asset Manager Usage
+
+### Quick Start
+```cpp
+// Get asset manager from application
+AssetManager& assetManager = app.getAssetManager();
+
+// Load individual assets
+assetManager.loadTexture("player_sprite", "textures/sprites/player.png", true);
+assetManager.loadAudio("jump_sound", "audio/jump.wav");
+assetManager.loadScene("level1", "scenes/level1.scene");
+assetManager.loadFont("ui_font", "fonts/arial.ttf");
+
+// Use assets in your code
+gl2d::Texture* playerTexture = assetManager.getTexture("player_sprite");
+if (playerTexture) {
+    renderer.renderRectangle(playerPos, *playerTexture);
+}
+```
+
+### Batch Loading
+```cpp
+// Load all textures from a directory
+assetManager.loadAssetsFromDirectory("textures/tiles/", AssetManager::AssetType::TEXTURE);
+
+// Preload essential assets
+std::vector<std::string> essentialAssets = {"player_sprite", "ground_tile", "menu_music"};
+assetManager.preloadAssets(essentialAssets);
+```
+
+### Asset Information & Management
+```cpp
+// Check if assets are loaded
+bool isLoaded = assetManager.isTextureLoaded("player_sprite");
+
+// Get asset statistics
+size_t totalAssets = assetManager.getAssetCount();
+size_t textureCount = assetManager.getAssetCountByType(AssetManager::AssetType::TEXTURE);
+size_t memoryUsage = assetManager.getTotalMemoryUsage();
+
+// List all loaded assets
+auto loadedAssets = assetManager.getLoadedAssets();
+for (const auto& asset : loadedAssets) {
+    std::cout << asset.name << " (" << asset.size << " bytes)" << std::endl;
+}
+
+// Validate assets
+if (!assetManager.validateAllAssets()) {
+    auto missingAssets = assetManager.getMissingAssets();
+    // Handle missing assets...
+}
+```
+
+### Hot Reloading with AssetManager
+```cpp
+// Enable hot reload
+assetManager.enableHotReload(true);
+
+// Set up asset load callbacks
+assetManager.setAssetLoadCallback([](const std::string& name, AssetManager::AssetType type, bool success) {
+    if (success) {
+        std::cout << "Asset reloaded: " << name << std::endl;
+    }
+});
+
+// In your game loop
+assetManager.checkForAssetChanges();
+```
+
 ## 🔄 Hot Reloading Developer Workflow
 
 ### Quick Start
@@ -195,6 +281,7 @@ Vertex & Fragment Shaders, Memory Management, Parallelization with CUDA and much
 - **Object-Oriented Design**: Clean separation of concerns with dedicated classes
 - **Modular Code Structure**:
   - `Application`: Main application lifecycle and coordination
+  - `AssetManager`: Centralized asset loading and management system
   - `GameObject`: Base class for all game entities
   - `Enemy`: Specialized class for AI-controlled entities
   - `GameWorld`: World management and object coordination
